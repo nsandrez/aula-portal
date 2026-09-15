@@ -32,9 +32,25 @@ class PanelPrincipalController extends Controller
         // Resumen para estudiante o apoderado
         $matriculaEstudiante = null;
         $porcentajeAsistencia = 100.0;
+        $pupilos = collect();
+
         if ($usuario?->esEstudiante()) {
             $matriculaEstudiante = $academicoService->obtenerMatriculaVigente($usuario);
             $porcentajeAsistencia = $asistenciaService->calcularPorcentajeEstudiante($usuario);
+        } elseif ($usuario?->esApoderado()) {
+            $pupilos = $usuario->pupilosMatriculados()
+                ->with(['estudiante', 'curso.profesorJefe'])
+                ->where('anio', 2026)
+                ->get()
+                ->map(function (Matricula $matricula) use ($asistenciaService) {
+                    if ($matricula->estudiante) {
+                        $matricula->porcentaje_asistencia = $asistenciaService->calcularPorcentajeEstudiante($matricula->estudiante);
+                    } else {
+                        $matricula->porcentaje_asistencia = 100.0;
+                    }
+
+                    return $matricula;
+                });
         }
 
         return view('dashboard', [
@@ -43,6 +59,7 @@ class PanelPrincipalController extends Controller
             'totalEstudiantes' => $totalEstudiantes,
             'matriculaEstudiante' => $matriculaEstudiante,
             'porcentajeAsistencia' => $porcentajeAsistencia,
+            'pupilos' => $pupilos,
         ]);
     }
 
@@ -54,15 +71,32 @@ class PanelPrincipalController extends Controller
         $usuario = $request->user();
         $cursos = $academicoService->obtenerCursosConAsignaturas();
         $matriculaEstudiante = null;
+        $pupilos = collect();
+        $pupiloSeleccionado = null;
 
         if ($usuario?->esEstudiante()) {
             $matriculaEstudiante = $academicoService->obtenerMatriculaVigente($usuario);
+        } elseif ($usuario?->esApoderado()) {
+            $pupilos = $usuario->pupilosMatriculados()
+                ->with(['estudiante', 'curso.cursoAsignaturas.asignatura', 'curso.cursoAsignaturas.docente'])
+                ->where('anio', 2026)
+                ->get();
+
+            $pupiloId = $request->query('pupilo_id');
+            if ($pupiloId) {
+                $pupiloSeleccionado = $pupilos->firstWhere('estudiante_id', (int) $pupiloId);
+            }
+            if (! $pupiloSeleccionado && $pupilos->isNotEmpty()) {
+                $pupiloSeleccionado = $pupilos->first();
+            }
         }
 
         return view('modulos.notas', [
             'usuario' => $usuario,
             'cursos' => $cursos,
             'matriculaEstudiante' => $matriculaEstudiante,
+            'pupilos' => $pupilos,
+            'pupiloSeleccionado' => $pupiloSeleccionado,
         ]);
     }
 
@@ -81,12 +115,37 @@ class PanelPrincipalController extends Controller
         $asistencias = $asistenciaService->obtenerAsistenciaPorCursoYFecha($cursoSeleccionado?->id ?? 1, $fecha);
         $resumen = $asistenciaService->calcularResumenCurso($cursoSeleccionado?->id ?? 1, $fecha);
 
-        // Si es estudiante, obtenemos su historial individual
+        // Si es estudiante o apoderado, obtenemos el historial individual
         $historialEstudiante = null;
         $porcentajeEstudiante = 100.0;
+        $pupilos = collect();
+        $pupiloSeleccionado = null;
+        $asistenciaHoyPupilo = null;
+
         if ($usuario?->esEstudiante()) {
             $historialEstudiante = $asistenciaService->obtenerHistorialEstudiante($usuario);
             $porcentajeEstudiante = $asistenciaService->calcularPorcentajeEstudiante($usuario);
+        } elseif ($usuario?->esApoderado()) {
+            $pupilos = $usuario->pupilosMatriculados()
+                ->with(['estudiante', 'curso'])
+                ->where('anio', 2026)
+                ->get();
+
+            $pupiloId = $request->query('pupilo_id');
+            if ($pupiloId) {
+                $pupiloSeleccionado = $pupilos->firstWhere('estudiante_id', (int) $pupiloId);
+            }
+            if (! $pupiloSeleccionado && $pupilos->isNotEmpty()) {
+                $pupiloSeleccionado = $pupilos->first();
+            }
+
+            if ($pupiloSeleccionado && $pupiloSeleccionado->estudiante) {
+                $historialEstudiante = $asistenciaService->obtenerHistorialEstudiante($pupiloSeleccionado->estudiante);
+                $porcentajeEstudiante = $asistenciaService->calcularPorcentajeEstudiante($pupiloSeleccionado->estudiante);
+                $asistenciaHoyPupilo = $historialEstudiante->firstWhere('fecha', $fecha)
+                    ?? $historialEstudiante->firstWhere('fecha', '2026-09-15')
+                    ?? $historialEstudiante->first();
+            }
         }
 
         return view('modulos.asistencias', [
@@ -98,6 +157,9 @@ class PanelPrincipalController extends Controller
             'resumen' => $resumen,
             'historialEstudiante' => $historialEstudiante,
             'porcentajeEstudiante' => $porcentajeEstudiante,
+            'pupilos' => $pupilos,
+            'pupiloSeleccionado' => $pupiloSeleccionado,
+            'asistenciaHoyPupilo' => $asistenciaHoyPupilo,
         ]);
     }
 

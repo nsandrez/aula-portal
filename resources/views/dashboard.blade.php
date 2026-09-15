@@ -39,33 +39,55 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Cursos Activos</span>
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    {{ $usuario?->esApoderado() ? 'Pupilos a Cargo' : 'Cursos Activos' }}
+                </span>
                 <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
                     </svg>
                 </span>
             </div>
-            <p class="text-2xl font-bold text-slate-900 mt-2">{{ $cursos->count() }} Cursos</p>
-            <p class="text-xs text-slate-500 mt-1">Con asignaturas asociadas</p>
+            <p class="text-2xl font-bold text-slate-900 mt-2">
+                @if($usuario?->esApoderado())
+                    {{ $pupilos->count() }} Hijos
+                @else
+                    {{ $cursos->count() }} Cursos
+                @endif
+            </p>
+            <p class="text-xs text-slate-500 mt-1">
+                {{ $usuario?->esApoderado() ? 'Estudiantes asociados' : 'Con asignaturas asociadas' }}
+            </p>
         </div>
 
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estudiantes Matriculados</span>
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    {{ $usuario?->esApoderado() ? 'Cursos Vinculados' : 'Estudiantes Matriculados' }}
+                </span>
                 <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                     </svg>
                 </span>
             </div>
-            <p class="text-2xl font-bold text-slate-900 mt-2">{{ $totalEstudiantes }} Alumnos</p>
-            <p class="text-xs text-slate-500 mt-1">Matrícula escolar 2026</p>
+            <p class="text-2xl font-bold text-slate-900 mt-2">
+                @if($usuario?->esApoderado())
+                    {{ $pupilos->pluck('curso_id')->unique()->count() }} Cursos
+                @else
+                    {{ $totalEstudiantes }} Alumnos
+                @endif
+            </p>
+            <p class="text-xs text-slate-500 mt-1">
+                {{ $usuario?->esApoderado() ? 'Niveles escolares cursados' : 'Matrícula escolar 2026' }}
+            </p>
         </div>
 
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Asistencia General</span>
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    {{ $usuario?->esApoderado() ? 'Promedio Asistencia' : 'Asistencia General' }}
+                </span>
                 <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -75,6 +97,8 @@
             <p class="text-2xl font-bold text-slate-900 mt-2">
                 @if($usuario?->esEstudiante())
                     {{ $porcentajeAsistencia }}%
+                @elseif($usuario?->esApoderado())
+                    {{ number_format($pupilos->avg('porcentaje_asistencia') ?? 100, 1) }}%
                 @else
                     95.2%
                 @endif
@@ -82,6 +106,8 @@
             <p class="text-xs text-slate-500 mt-1">
                 @if($usuario?->esEstudiante())
                     Mi asistencia acumulada
+                @elseif($usuario?->esApoderado())
+                    Promedio de mis pupilos
                 @else
                     Promedio general del colegio
                 @endif
@@ -90,17 +116,88 @@
 
         <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Cuerpo Docente</span>
+                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    {{ $usuario?->esApoderado() ? 'Estado Escolar' : 'Cuerpo Docente' }}
+                </span>
                 <span class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xs">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                     </svg>
                 </span>
             </div>
-            <p class="text-2xl font-bold text-slate-900 mt-2">100%</p>
-            <p class="text-xs text-slate-500 mt-1">Asignaturas cubiertas</p>
+            <p class="text-2xl font-bold text-slate-900 mt-2">
+                @if($usuario?->esApoderado())
+                    Regular
+                @else
+                    100%
+                @endif
+            </p>
+            <p class="text-xs text-slate-500 mt-1">
+                {{ $usuario?->esApoderado() ? 'Al día ciclo escolar 2026' : 'Asignaturas cubiertas' }}
+            </p>
         </div>
     </div>
+
+    <!-- Sección de Pupilos Asignados para Apoderado -->
+    @if($usuario?->esApoderado())
+        <div class="space-y-4">
+            <div>
+                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">
+                    Mis Pupilos / Hijos a Cargo ({{ $pupilos->count() }})
+                </h3>
+                <p class="text-xs text-slate-600 mt-0.5">
+                    Acceso directo al libro de notas y control de asistencia individual de cada uno de tus hijos.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                @forelse($pupilos as $pupilo)
+                    <div class="p-6 rounded-2xl bg-white border border-slate-200 hover:border-amber-400/80 transition-all shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-start justify-between gap-3 mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-sm border border-amber-200">
+                                        {{ strtoupper(substr($pupilo->estudiante?->name ?? 'P', 0, 2)) }}
+                                    </div>
+                                    <div>
+                                        <h4 class="text-base font-bold text-slate-900">{{ $pupilo->estudiante?->name }}</h4>
+                                        <p class="text-xs text-slate-500 font-mono">{{ $pupilo->estudiante?->rut ?? $pupilo->estudiante?->email }}</p>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                    {{ $pupilo->curso?->nombre }}
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 py-3 border-y border-slate-100 text-xs">
+                                <div>
+                                    <span class="text-slate-400 block font-medium">Profesor(a) Jefe:</span>
+                                    <span class="font-semibold text-slate-800">{{ $pupilo->curso?->profesorJefe?->name ?? 'Por asignar' }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block font-medium">Asistencia Acumulada:</span>
+                                    <span class="font-bold text-emerald-600 font-mono">{{ $pupilo->porcentaje_asistencia ?? 100 }}%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 pt-3 flex items-center justify-between gap-3">
+                            <a href="{{ route('notas.index', ['pupilo_id' => $pupilo->estudiante_id]) }}" class="flex-1 py-2 px-3 text-center bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition-colors">
+                                Ver Calificaciones
+                            </a>
+                            <a href="{{ route('asistencias.index', ['pupilo_id' => $pupilo->estudiante_id]) }}" class="flex-1 py-2 px-3 text-center bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-xl shadow-xs transition-colors">
+                                Ver Asistencias
+                            </a>
+                        </div>
+                    </div>
+                @empty
+                    <div class="p-8 rounded-2xl bg-white border border-slate-200 text-center col-span-2 text-slate-500 text-xs">
+                        No tienes pupilos matriculados asignados actualmente. Contacta a la Dirección del establecimiento.
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    @endif
 
     <!-- Módulos del Sistema en Tarjetas Blancas Elegantes -->
     <div>

@@ -20,6 +20,9 @@ export function cerrarModal(modalId) {
     }
 }
 
+window.abrirModal = abrirModal;
+window.cerrarModal = cerrarModal;
+
 export function iniciarModales() {
     // Abrir modales vía atributo data-abrir-modal
     document.querySelectorAll('[data-abrir-modal]').forEach((boton) => {
