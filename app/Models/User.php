@@ -10,6 +10,8 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -80,5 +82,53 @@ class User extends Authenticatable
     public function tieneRol(RolUsuario ...$roles): bool
     {
         return in_array($this->rol, $roles, true);
+    }
+
+    /**
+     * Cursos donde el usuario es profesor jefe.
+     */
+    public function cursosComoProfesorJefe(): HasMany
+    {
+        return $this->hasMany(Curso::class, 'profesor_jefe_id');
+    }
+
+    /**
+     * Asignaturas que dicta el docente en diversos cursos.
+     */
+    public function asignaturasDictadas(): HasMany
+    {
+        return $this->hasMany(CursoAsignatura::class, 'docente_id');
+    }
+
+    /**
+     * Matrícula activa del estudiante para el año vigente.
+     */
+    public function matriculaActual(): HasOne
+    {
+        return $this->hasOne(Matricula::class, 'estudiante_id')->where('anio', 2026);
+    }
+
+    /**
+     * Historial de matrículas del estudiante.
+     */
+    public function matriculas(): HasMany
+    {
+        return $this->hasMany(Matricula::class, 'estudiante_id');
+    }
+
+    /**
+     * Pupilos asignados al apoderado.
+     */
+    public function pupilosMatriculados(): HasMany
+    {
+        return $this->hasMany(Matricula::class, 'apoderado_id');
+    }
+
+    /**
+     * Registros de asistencia del estudiante.
+     */
+    public function asistencias(): HasMany
+    {
+        return $this->hasMany(Asistencia::class, 'estudiante_id');
     }
 }
