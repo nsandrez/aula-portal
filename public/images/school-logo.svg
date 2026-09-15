@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" class="w-full h-full">
+  <!-- Fondo circular con borde dorado -->
+  <circle cx="100" cy="100" r="94" fill="#111827" stroke="#FBBF24" stroke-width="5"/>
+  <circle cx="100" cy="100" r="86" fill="#18181B" stroke="#F59E0B" stroke-width="2" stroke-dasharray="4 3"/>
+
+  <!-- Birrete / Graduation cap -->
+  <polygon points="100,45 155,70 100,95 45,70" fill="#FBBF24"/>
+  <polygon points="100,52 145,72 100,90 55,72" fill="#FDE68A"/>
+  
+  <!-- Base del birrete -->
+  <path d="M68,82 L68,105 C68,120 100,128 100,128 C100,128 132,120 132,105 L132,82" fill="#F59E0B"/>
+
+  <!-- Borla / Tassel -->
+  <path d="M145,72 L152,100" stroke="#FDE68A" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="152" cy="104" r="4" fill="#FDE68A"/>
+
+  <!-- Libro abierto de sabiduría -->
+  <path d="M50,132 C65,126 85,126 100,134 C115,126 135,126 150,132 L150,158 C135,152 115,152 100,160 C85,152 65,152 50,158 Z" fill="#FBBF24"/>
+  <path d="M54,136 C68,131 84,131 98,138 L98,156 C84,149 68,149 54,154 Z" fill="#111827"/>
+  <path d="M102,138 C116,131 132,131 146,136 L146,154 C132,149 116,149 102,156 Z" fill="#111827"/>
+
+  <!-- Estrella institucional superior -->
+  <path d="M100,24 L103,32 L112,32 L105,38 L108,46 L100,41 L92,46 L95,38 L88,32 L97,32 Z" fill="#FBBF24"/>
+</svg>
