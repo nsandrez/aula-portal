@@ -4,7 +4,7 @@
 @section('encabezado', 'Panel General Institucional')
 
 @section('contenido')
-<div class="space-y-6 max-w-7xl mx-auto">
+<div class="space-y-6 max-w-[1600px] w-full mx-auto">
     <!-- Banner de Bienvenida Institucional Claro -->
     <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-xs">
         <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
