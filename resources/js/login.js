@@ -1,52 +1,39 @@
 /**
  * Lógica interactiva para la vista de Login Escolar
  * - Alternancia de visibilidad de contraseña (mostrar/ocultar)
- * - Formateo y validación de RUT chileno en tiempo real (Módulo 11)
+ * - Formateo y validación de RUT en tiempo real (sin puntos, solo con guión: 12345678-9)
+ * - Soporte fluido para ingreso de correo electrónico (permite escribir letras sin bloquear)
  * - Validación del lado del cliente y despliegue de mensajes de error
  */
 
 /**
- * Limpia y formatea un string a formato de RUT chileno (XX.XXX.XXX-X)
+ * Limpia y formatea un string a formato de RUT sin puntos y con guión (ej: 12345678-9 o 12345678-K)
  * @param {string} rut
  * @returns {string}
  */
 export function formatearRut(rut) {
-    // Si contiene '@', el usuario probablemente escribe un correo, no formatear como RUT
-    if (rut.includes('@')) {
+    // Si contiene letras que no correspondan a K o contiene '@', es un correo o texto libre: no alterar
+    if (/[@a-jl-zA-JL-Z]/.test(rut)) {
         return rut;
     }
 
-    // Remover caracteres no válidos para RUT (mantener números y k/K)
+    // Mantener únicamente dígitos y la letra k/K
     const limpio = rut.replace(/[^0-9kK]/g, '').toUpperCase();
-    if (limpio.length === 0) {
-        return '';
-    }
-
     if (limpio.length <= 1) {
         return limpio;
     }
 
-    const cuerpo = limpio.slice(0, -1);
-    const dv = limpio.slice(-1);
+    // Limitar a máximo 8 dígitos para el cuerpo y 1 dígito verificador (máx 9 caracteres)
+    const truncado = limpio.slice(0, 9);
+    const cuerpo = truncado.slice(0, -1);
+    const dv = truncado.slice(-1);
 
-    // Formatear cuerpo con puntos de miles
-    let cuerpoFormateado = '';
-    let contador = 0;
-
-    for (let i = cuerpo.length - 1; i >= 0; i--) {
-        cuerpoFormateado = cuerpo[i] + cuerpoFormateado;
-        contador++;
-        if (contador === 3 && i > 0) {
-            cuerpoFormateado = '.' + cuerpoFormateado;
-            contador = 0;
-        }
-    }
-
-    return `${cuerpoFormateado}-${dv}`;
+    // Formato: sin puntos, solo con guión antes del dígito verificador
+    return `${cuerpo}-${dv}`;
 }
 
 /**
- * Valida un RUT chileno usando el algoritmo de Módulo 11
+ * Valida un RUT usando el algoritmo de Módulo 11
  * @param {string} rut
  * @returns {boolean}
  */
@@ -125,12 +112,15 @@ export function iniciarLogin() {
     }
 
     // 2. Formateo dinámico de RUT mientras el usuario escribe
+    // Solo se formatea si el usuario está ingresando números o guión (no letras de correo)
     if (campoIdentificador) {
         campoIdentificador.addEventListener('input', (evento) => {
             const valor = evento.target.value;
 
-            // Solo autoformatear si NO parece un correo electrónico
-            if (!valor.includes('@')) {
+            // Si contiene caracteres típicos de correo (como letras a-z excepto K o @), no tocar
+            const esCandidatoRut = /^[0-9kK.\-]+$/.test(valor);
+
+            if (esCandidatoRut) {
                 const posicionCursor = evento.target.selectionStart;
                 const valorPrevio = valor;
                 const formateado = formatearRut(valor);
@@ -162,7 +152,7 @@ export function iniciarLogin() {
 
         if (campoEnfoque) {
             campoEnfoque.focus();
-            campoEnfoque.classList.add('border-amber-400', 'ring-2', 'ring-amber-400/40');
+            campoEnfoque.classList.add('border-amber-500', 'ring-1', 'ring-amber-500/40');
         }
     }
 
@@ -172,10 +162,10 @@ export function iniciarLogin() {
             contenedorErrorCliente.classList.add('hidden');
         }
         if (campoIdentificador) {
-            campoIdentificador.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
+            campoIdentificador.classList.remove('border-amber-500', 'ring-1', 'ring-amber-500/40');
         }
         if (campoContrasena) {
-            campoContrasena.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
+            campoContrasena.classList.remove('border-amber-500', 'ring-1', 'ring-amber-500/40');
         }
     }
 
@@ -189,7 +179,7 @@ export function iniciarLogin() {
         // Validar campo identificador vacío
         if (!identificador) {
             evento.preventDefault();
-            mostrarError('Por favor, ingresa tu correo institucional o tu RUT chileno.', campoIdentificador);
+            mostrarError('Por favor, ingresa tu correo institucional o tu RUT.', campoIdentificador);
             return;
         }
 
@@ -201,10 +191,10 @@ export function iniciarLogin() {
                 return;
             }
         } else {
-            // Si no contiene '@', debe ser un RUT chileno válido
+            // Si no contiene '@', debe ser un RUT válido
             if (!esRutValido(identificador)) {
                 evento.preventDefault();
-                mostrarError('El RUT ingresado no es válido. Verifica números y dígito verificador (ejemplo: 12.345.678-9 o 12345678-K).', campoIdentificador);
+                mostrarError('El RUT ingresado no es válido. Verifica números y dígito verificador (ejemplo: 12345678-9 o 12345678-K).', campoIdentificador);
                 return;
             }
         }

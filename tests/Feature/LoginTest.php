@@ -19,7 +19,7 @@ class LoginTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Aula Portal');
-        $response->assertSee('Correo Institucional o RUT Chileno');
+        $response->assertSee('Correo Institucional o RUT');
         $response->assertSee('Contraseña');
     }
 

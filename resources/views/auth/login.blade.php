@@ -69,7 +69,7 @@
                 <!-- Campo Correo o RUT -->
                 <div>
                     <label for="identificador" class="block text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-1.5">
-                        Correo Institucional o RUT Chileno
+                        Correo Institucional o RUT
                     </label>
                     <div class="relative">
                         <input
@@ -77,7 +77,7 @@
                             id="identificador"
                             name="identificador"
                             value="{{ old('identificador') }}"
-                            placeholder="ej. alumno@colegio.cl o 12.345.678-9"
+                            placeholder="ej. alumno@colegio.cl o 12345678-9"
                             autocomplete="username"
                             required
                             class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0f12] border border-zinc-700/80 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-colors text-sm"
@@ -89,7 +89,7 @@
                         </div>
                     </div>
                     <p class="mt-1.5 text-xs text-zinc-500">
-                        Ingresa tu email escolar o tu RUT con o sin puntos y guión.
+                        Ingresa tu email escolar o tu RUT con guión (ejemplo: 12345678-9).
                     </p>
                 </div>
 
