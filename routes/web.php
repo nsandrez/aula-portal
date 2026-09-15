@@ -7,6 +7,6 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/login', [AuthController::class, 'mostrarFormularioLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'iniciarSesion'])->name('login.post');
+Route::post('/logout', [AuthController::class, 'cerrarSesion'])->name('logout');

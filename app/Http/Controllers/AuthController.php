@@ -16,7 +16,7 @@ class AuthController extends Controller
     /**
      * Muestra el formulario de inicio de sesión escolar.
      */
-    public function showLoginForm(): View|RedirectResponse
+    public function mostrarFormularioLogin(): View|RedirectResponse
     {
         if (Auth::check()) {
             return redirect()->to('/');
@@ -28,13 +28,13 @@ class AuthController extends Controller
     /**
      * Procesa la solicitud de inicio de sesión delegando la lógica en AuthService.
      */
-    public function login(LoginRequest $request, AuthService $authService): RedirectResponse
+    public function iniciarSesion(LoginRequest $request, AuthService $authService): RedirectResponse
     {
         $identificador = (string) $request->input('identificador');
         $password = (string) $request->input('password');
-        $remember = (bool) $request->boolean('remember');
+        $recordar = (bool) $request->boolean('remember');
 
-        if ($authService->authenticate($identificador, $password, $remember)) {
+        if ($authService->autenticar($identificador, $password, $recordar)) {
             $request->session()->regenerate();
 
             return redirect()->intended('/');
@@ -48,11 +48,11 @@ class AuthController extends Controller
     }
 
     /**
-     * Cierra la sesión del usuario.
+     * Cierra la sesión activa del usuario.
      */
-    public function logout(Request $request, AuthService $authService): RedirectResponse
+    public function cerrarSesion(Request $request, AuthService $authService): RedirectResponse
     {
-        $authService->logout($request);
+        $authService->cerrarSesion($request);
 
         return redirect()->route('login');
     }

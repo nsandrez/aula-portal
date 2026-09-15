@@ -10,24 +10,24 @@
  * @param {string} rut
  * @returns {string}
  */
-export function formatRut(rut) {
+export function formatearRut(rut) {
     // Si contiene '@', el usuario probablemente escribe un correo, no formatear como RUT
     if (rut.includes('@')) {
         return rut;
     }
 
     // Remover caracteres no válidos para RUT (mantener números y k/K)
-    const clean = rut.replace(/[^0-9kK]/g, '').toUpperCase();
-    if (clean.length === 0) {
+    const limpio = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+    if (limpio.length === 0) {
         return '';
     }
 
-    if (clean.length <= 1) {
-        return clean;
+    if (limpio.length <= 1) {
+        return limpio;
     }
 
-    const cuerpo = clean.slice(0, -1);
-    const dv = clean.slice(-1);
+    const cuerpo = limpio.slice(0, -1);
+    const dv = limpio.slice(-1);
 
     // Formatear cuerpo con puntos de miles
     let cuerpoFormateado = '';
@@ -50,15 +50,15 @@ export function formatRut(rut) {
  * @param {string} rut
  * @returns {boolean}
  */
-export function isValidRut(rut) {
-    const clean = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+export function esRutValido(rut) {
+    const limpio = rut.replace(/[^0-9kK]/g, '').toUpperCase();
 
-    if (clean.length < 8 || clean.length > 9) {
+    if (limpio.length < 8 || limpio.length > 9) {
         return false;
     }
 
-    const cuerpo = clean.slice(0, -1);
-    const dv = clean.slice(-1);
+    const cuerpo = limpio.slice(0, -1);
+    const dv = limpio.slice(-1);
 
     if (!/^\d+$/.test(cuerpo)) {
         return false;
@@ -80,148 +80,146 @@ export function isValidRut(rut) {
 
 /**
  * Valida un formato de correo electrónico
- * @param {string} email
+ * @param {string} correo
  * @returns {boolean}
  */
-export function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+export function esCorreoValido(correo) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim());
 }
 
 /**
  * Inicializa los eventos y comportamientos del formulario de login
  */
-export function initLogin() {
-    const loginForm = document.getElementById('login-form');
-    if (!loginForm) {
+export function iniciarLogin() {
+    const formularioLogin = document.getElementById('login-form');
+    if (!formularioLogin) {
         return;
     }
 
-    const identifierInput = document.getElementById('identificador');
-    const passwordInput = document.getElementById('password');
-    const togglePasswordBtn = document.getElementById('toggle-password');
-    const eyeOpenIcon = document.getElementById('eye-icon-open');
-    const eyeClosedIcon = document.getElementById('eye-icon-closed');
-    const clientErrorContainer = document.getElementById('client-error-container');
-    const clientErrorMessage = document.getElementById('client-error-message');
+    const campoIdentificador = document.getElementById('identificador');
+    const campoContrasena = document.getElementById('password');
+    const botonAlternarContrasena = document.getElementById('toggle-password');
+    const iconoOjoAbierto = document.getElementById('eye-icon-open');
+    const iconoOjoCerrado = document.getElementById('eye-icon-closed');
+    const contenedorErrorCliente = document.getElementById('client-error-container');
+    const mensajeErrorCliente = document.getElementById('client-error-message');
 
     // 1. Mostrar / Ocultar Contraseña
-    if (togglePasswordBtn && passwordInput) {
-        togglePasswordBtn.addEventListener('click', () => {
-            const isPassword = passwordInput.type === 'password';
-            passwordInput.type = isPassword ? 'text' : 'password';
+    if (botonAlternarContrasena && campoContrasena) {
+        botonAlternarContrasena.addEventListener('click', () => {
+            const esTipoPassword = campoContrasena.type === 'password';
+            campoContrasena.type = esTipoPassword ? 'text' : 'password';
 
-            if (eyeOpenIcon && eyeClosedIcon) {
-                if (isPassword) {
-                    eyeOpenIcon.classList.add('hidden');
-                    eyeClosedIcon.classList.remove('hidden');
-                    togglePasswordBtn.setAttribute('aria-label', 'Ocultar contraseña');
+            if (iconoOjoAbierto && iconoOjoCerrado) {
+                if (esTipoPassword) {
+                    iconoOjoAbierto.classList.add('hidden');
+                    iconoOjoCerrado.classList.remove('hidden');
+                    botonAlternarContrasena.setAttribute('aria-label', 'Ocultar contraseña');
                 } else {
-                    eyeOpenIcon.classList.remove('hidden');
-                    eyeClosedIcon.classList.add('hidden');
-                    togglePasswordBtn.setAttribute('aria-label', 'Mostrar contraseña');
+                    iconoOjoAbierto.classList.remove('hidden');
+                    iconoOjoCerrado.classList.add('hidden');
+                    botonAlternarContrasena.setAttribute('aria-label', 'Mostrar contraseña');
                 }
             }
         });
     }
 
     // 2. Formateo dinámico de RUT mientras el usuario escribe
-    if (identifierInput) {
-        identifierInput.addEventListener('input', (event) => {
-            const valor = event.target.value;
+    if (campoIdentificador) {
+        campoIdentificador.addEventListener('input', (evento) => {
+            const valor = evento.target.value;
 
             // Solo autoformatear si NO parece un correo electrónico
             if (!valor.includes('@')) {
-                const cursorPosition = event.target.selectionStart;
+                const posicionCursor = evento.target.selectionStart;
                 const valorPrevio = valor;
-                const formateado = formatRut(valor);
+                const formateado = formatearRut(valor);
 
                 if (valor !== formateado) {
-                    event.target.value = formateado;
-                    // Ajustar posición del cursor si es posible
-                    if (cursorPosition === valorPrevio.length) {
-                        event.target.setSelectionRange(formateado.length, formateado.length);
+                    evento.target.value = formateado;
+                    if (posicionCursor === valorPrevio.length) {
+                        evento.target.setSelectionRange(formateado.length, formateado.length);
                     }
                 }
             }
 
-            // Limpiar errores visuales si el usuario empieza a corregir
             limpiarErrores();
         });
     }
 
-    if (passwordInput) {
-        passwordInput.addEventListener('input', () => {
+    if (campoContrasena) {
+        campoContrasena.addEventListener('input', () => {
             limpiarErrores();
         });
     }
 
-    // Helper para mostrar error en el DOM
-    function mostrarError(mensaje, inputFocus = null) {
-        if (clientErrorContainer && clientErrorMessage) {
-            clientErrorMessage.textContent = mensaje;
-            clientErrorContainer.classList.remove('hidden');
+    // Función para mostrar error visual en el formulario
+    function mostrarError(mensaje, campoEnfoque = null) {
+        if (contenedorErrorCliente && mensajeErrorCliente) {
+            mensajeErrorCliente.textContent = mensaje;
+            contenedorErrorCliente.classList.remove('hidden');
         }
 
-        if (inputFocus) {
-            inputFocus.focus();
-            inputFocus.classList.add('border-amber-400', 'ring-2', 'ring-amber-400/40');
+        if (campoEnfoque) {
+            campoEnfoque.focus();
+            campoEnfoque.classList.add('border-amber-400', 'ring-2', 'ring-amber-400/40');
         }
     }
 
-    // Helper para limpiar mensaje de error del cliente
+    // Función para limpiar mensaje de error del cliente
     function limpiarErrores() {
-        if (clientErrorContainer) {
-            clientErrorContainer.classList.add('hidden');
+        if (contenedorErrorCliente) {
+            contenedorErrorCliente.classList.add('hidden');
         }
-        if (identifierInput) {
-            identifierInput.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
+        if (campoIdentificador) {
+            campoIdentificador.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
         }
-        if (passwordInput) {
-            passwordInput.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
+        if (campoContrasena) {
+            campoContrasena.classList.remove('border-amber-400', 'ring-2', 'ring-amber-400/40');
         }
     }
 
     // 3. Validación previa al envío (Submit)
-    loginForm.addEventListener('submit', (event) => {
+    formularioLogin.addEventListener('submit', (evento) => {
         limpiarErrores();
 
-        const identificador = identifierInput ? identifierInput.value.trim() : '';
-        const password = passwordInput ? passwordInput.value : '';
+        const identificador = campoIdentificador ? campoIdentificador.value.trim() : '';
+        const password = campoContrasena ? campoContrasena.value : '';
 
         // Validar campo identificador vacío
         if (!identificador) {
-            event.preventDefault();
-            mostrarError('Por favor, ingresa tu correo institucional o tu RUT chileno.', identifierInput);
+            evento.preventDefault();
+            mostrarError('Por favor, ingresa tu correo institucional o tu RUT chileno.', campoIdentificador);
             return;
         }
 
         // Si contiene '@', validar formato de correo
         if (identificador.includes('@')) {
-            if (!isValidEmail(identificador)) {
-                event.preventDefault();
-                mostrarError('El correo electrónico ingresado no tiene un formato válido (ejemplo: usuario@colegio.cl).', identifierInput);
+            if (!esCorreoValido(identificador)) {
+                evento.preventDefault();
+                mostrarError('El correo electrónico ingresado no tiene un formato válido (ejemplo: usuario@colegio.cl).', campoIdentificador);
                 return;
             }
         } else {
             // Si no contiene '@', debe ser un RUT chileno válido
-            if (!isValidRut(identificador)) {
-                event.preventDefault();
-                mostrarError('El RUT ingresado no es válido. Verifica números y dígito verificador (ejemplo: 12.345.678-9 o 12345678-K).', identifierInput);
+            if (!esRutValido(identificador)) {
+                evento.preventDefault();
+                mostrarError('El RUT ingresado no es válido. Verifica números y dígito verificador (ejemplo: 12.345.678-9 o 12345678-K).', campoIdentificador);
                 return;
             }
         }
 
         // Validar campo contraseña vacío
         if (!password) {
-            event.preventDefault();
-            mostrarError('Por favor, ingresa tu contraseña institucional.', passwordInput);
+            evento.preventDefault();
+            mostrarError('Por favor, ingresa tu contraseña institucional.', campoContrasena);
             return;
         }
 
         // Validar longitud mínima de contraseña
         if (password.length < 6) {
-            event.preventDefault();
-            mostrarError('La contraseña institucional debe tener al menos 6 caracteres.', passwordInput);
+            evento.preventDefault();
+            mostrarError('La contraseña institucional debe tener al menos 6 caracteres.', campoContrasena);
             return;
         }
     });
@@ -229,7 +227,7 @@ export function initLogin() {
 
 // Inicializar cuando el DOM esté listo
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initLogin);
+    document.addEventListener('DOMContentLoaded', iniciarLogin);
 } else {
-    initLogin();
+    iniciarLogin();
 }

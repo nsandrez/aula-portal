@@ -13,7 +13,7 @@ class AuthService
     /**
      * Limpia un RUT chileno eliminando puntos y guiones, y convirtiendo a mayúsculas.
      */
-    public function cleanRut(string $rut): string
+    public function limpiarRut(string $rut): string
     {
         return strtoupper(preg_replace('/[^0-9kK]/', '', $rut) ?? '');
     }
@@ -21,16 +21,16 @@ class AuthService
     /**
      * Valida si un string corresponde a un RUT chileno válido mediante el algoritmo de Módulo 11.
      */
-    public function isValidRut(string $rut): bool
+    public function esRutValido(string $rut): bool
     {
-        $cleaned = $this->cleanRut($rut);
+        $limpio = $this->limpiarRut($rut);
 
-        if (strlen($cleaned) < 8 || strlen($cleaned) > 9) {
+        if (strlen($limpio) < 8 || strlen($limpio) > 9) {
             return false;
         }
 
-        $cuerpo = substr($cleaned, 0, -1);
-        $dv = substr($cleaned, -1);
+        $cuerpo = substr($limpio, 0, -1);
+        $dv = substr($limpio, -1);
 
         if (! ctype_digit($cuerpo)) {
             return false;
@@ -58,39 +58,39 @@ class AuthService
     /**
      * Determina si el identificador tiene formato de correo electrónico.
      */
-    public function isEmail(string $identifier): bool
+    public function esCorreo(string $identificador): bool
     {
-        return (bool) filter_var($identifier, FILTER_VALIDATE_EMAIL);
+        return (bool) filter_var($identificador, FILTER_VALIDATE_EMAIL);
     }
 
     /**
      * Intenta autenticar un usuario usando correo electrónico o RUT chileno.
      */
-    public function authenticate(string $identifier, string $password, bool $remember = false): bool
+    public function autenticar(string $identificador, string $password, bool $recordar = false): bool
     {
-        $trimmed = trim($identifier);
+        $limpio = trim($identificador);
 
-        if ($this->isEmail($trimmed)) {
+        if ($this->esCorreo($limpio)) {
             return Auth::attempt([
-                'email' => $trimmed,
+                'email' => $limpio,
                 'password' => $password,
-            ], $remember);
+            ], $recordar);
         }
 
-        $cleanRut = $this->cleanRut($trimmed);
+        $rutLimpio = $this->limpiarRut($limpio);
 
-        if (! empty($cleanRut)) {
-            $user = User::query()
-                ->where('rut', $cleanRut)
-                ->orWhere('rut', $trimmed)
-                ->orWhereRaw("UPPER(REPLACE(REPLACE(REPLACE(COALESCE(rut, ''), '.', ''), '-', ''), ' ', '')) = ?", [$cleanRut])
+        if (! empty($rutLimpio)) {
+            $usuario = User::query()
+                ->where('rut', $rutLimpio)
+                ->orWhere('rut', $limpio)
+                ->orWhereRaw("UPPER(REPLACE(REPLACE(REPLACE(COALESCE(rut, ''), '.', ''), '-', ''), ' ', '')) = ?", [$rutLimpio])
                 ->first();
 
-            if ($user !== null) {
+            if ($usuario !== null) {
                 return Auth::attempt([
-                    'id' => $user->id,
+                    'id' => $usuario->id,
                     'password' => $password,
-                ], $remember);
+                ], $recordar);
             }
         }
 
@@ -100,7 +100,7 @@ class AuthService
     /**
      * Cierra la sesión activa del usuario e invalida la sesión HTTP.
      */
-    public function logout(Request $request): void
+    public function cerrarSesion(Request $request): void
     {
         Auth::logout();
         $request->session()->invalidate();
