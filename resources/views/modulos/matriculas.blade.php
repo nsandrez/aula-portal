@@ -20,12 +20,18 @@
         </div>
 
         @if(auth()->user()?->tieneRol(\App\Enums\RolUsuario::Administrador, \App\Enums\RolUsuario::SuperUsuario))
-            <div class="flex items-center gap-3">
-                <button type="button" data-abrir-modal="modal-nueva-matricula" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="flex items-center gap-2.5">
+                <button type="button" onclick="cambiarTipoMatricula('nuevo'); abrirModal('modal-nueva-matricula');" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
                     </svg>
-                    <span>Nueva Matrícula</span>
+                    <span>+ Registrar Nuevo Alumno</span>
+                </button>
+                <button type="button" onclick="cambiarTipoMatricula('existente'); abrirModal('modal-nueva-matricula');" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    <span>Matricular Alumno</span>
                 </button>
             </div>
         @endif
@@ -106,14 +112,14 @@
 </div>
 
 <!-- ======================================================== -->
-<!-- MODAL: NUEVA MATRÍCULA                                   -->
+<!-- MODAL: NUEVA MATRÍCULA / REGISTRO DE ALUMNO              -->
 <!-- ======================================================== -->
 <div id="modal-nueva-matricula" class="modal-fondo fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
     <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
         <div class="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
-                <h3 class="text-base font-bold text-slate-900">Nueva Matrícula Escolar</h3>
-                <p class="text-xs text-slate-500">Inscribe a un alumno en un curso asignando su número de lista</p>
+                <h3 class="text-base font-bold text-slate-900">Matrícula y Registro de Alumnos</h3>
+                <p class="text-xs text-slate-500">Inscribe a un alumno existente o registra un nuevo estudiante</p>
             </div>
             <button type="button" data-cerrar-modal="modal-nueva-matricula" class="p-1 text-slate-400 hover:text-slate-700 rounded-lg">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -124,9 +130,22 @@
 
         <form action="{{ route('matriculas.guardar') }}" method="POST" class="mt-4 space-y-4">
             @csrf
-            <div>
-                <label for="matricula-estudiante" class="block text-xs font-semibold text-slate-700 mb-1">Estudiante</label>
-                <select id="matricula-estudiante" name="estudiante_id" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500">
+            <input type="hidden" id="matricula-tipo-registro" name="tipo_registro" value="existente">
+
+            <!-- Selector de Modo: Alumno Existente vs Nuevo Alumno -->
+            <div class="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200">
+                <button type="button" id="tab-alumno-existente" onclick="cambiarTipoMatricula('existente')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-2xs">
+                    Alumno Existente
+                </button>
+                <button type="button" id="tab-alumno-nuevo" onclick="cambiarTipoMatricula('nuevo')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-slate-500 hover:text-slate-900">
+                    + Registrar Nuevo Alumno
+                </button>
+            </div>
+
+            <!-- 1. MODO: ALUMNO EXISTENTE -->
+            <div id="seccion-alumno-existente">
+                <label for="matricula-estudiante" class="block text-xs font-semibold text-slate-700 mb-1">Seleccionar Estudiante Existente</label>
+                <select id="matricula-estudiante" name="estudiante_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500">
                     <option value="">-- Selecciona el estudiante --</option>
                     @foreach($estudiantes ?? [] as $estudiante)
                         <option value="{{ $estudiante->id }}">{{ $estudiante->name }} ({{ $estudiante->rut ?? $estudiante->email }})</option>
@@ -134,6 +153,31 @@
                 </select>
             </div>
 
+            <!-- 2. MODO: CREAR NUEVO ALUMNO -->
+            <div id="seccion-alumno-nuevo" class="hidden space-y-3 p-3.5 bg-amber-50/50 rounded-xl border border-amber-200/80">
+                <div>
+                    <label for="nuevo-alumno-nombre" class="block text-xs font-semibold text-slate-800 mb-1">Nombre Completo del Alumno</label>
+                    <input type="text" id="nuevo-alumno-nombre" name="nombre_estudiante" placeholder="Ej: Javier Ignacio Silva Contreras" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="nuevo-alumno-email" class="block text-xs font-semibold text-slate-800 mb-1">Correo Electrónico</label>
+                        <input type="email" id="nuevo-alumno-email" name="email_estudiante" placeholder="alumno@aula-portal.cl" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label for="nuevo-alumno-rut" class="block text-xs font-semibold text-slate-800 mb-1">RUT (sin puntos con guión)</label>
+                        <input type="text" id="nuevo-alumno-rut" name="rut_estudiante" placeholder="22334455-6" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="nuevo-alumno-password" class="block text-xs font-semibold text-slate-800 mb-1">Contraseña Inicial (opcional)</label>
+                    <input type="password" id="nuevo-alumno-password" name="password_estudiante" placeholder="Por defecto: estudiante2026" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500">
+                </div>
+            </div>
+
+            <!-- CAMPOS COMUNES DE MATRÍCULA -->
             <div>
                 <label for="matricula-curso" class="block text-xs font-semibold text-slate-700 mb-1">Curso de Destino</label>
                 <select id="matricula-curso" name="curso_id" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500">
@@ -158,6 +202,12 @@
             <div>
                 <label for="matricula-apoderado" class="block text-xs font-semibold text-slate-700 mb-1">Apoderado Responsable</label>
                 <select id="matricula-apoderado" name="apoderado_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-amber-500">
+                    <option value="">-- Sin apoderado registrado --</option>
+                    @foreach($apoderados ?? [] as $apoderado)
+                        <option value="{{ $apoderado->id }}">{{ $apoderado->name }} ({{ $apoderado->rut ?? $apoderado->email }})</option>
+                    @endforeach
+                </select>
+            </div>
                     <option value="">-- Sin apoderado registrado --</option>
                     @foreach($apoderados ?? [] as $apoderado)
                         <option value="{{ $apoderado->id }}">{{ $apoderado->name }} ({{ $apoderado->rut ?? $apoderado->email }})</option>
@@ -236,6 +286,39 @@
 </div>
 
 <script>
+    function cambiarTipoMatricula(tipo) {
+        const inputTipo = document.getElementById('matricula-tipo-registro');
+        const tabExistente = document.getElementById('tab-alumno-existente');
+        const tabNuevo = document.getElementById('tab-alumno-nuevo');
+        const seccionExistente = document.getElementById('seccion-alumno-existente');
+        const seccionNuevo = document.getElementById('seccion-alumno-nuevo');
+        const selectEstudiante = document.getElementById('matricula-estudiante');
+        const inputNuevoNombre = document.getElementById('nuevo-alumno-nombre');
+        const inputNuevoEmail = document.getElementById('nuevo-alumno-email');
+
+        if (!inputTipo) return;
+
+        if (tipo === 'nuevo') {
+            inputTipo.value = 'nuevo';
+            if (tabNuevo) tabNuevo.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-2xs';
+            if (tabExistente) tabExistente.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-slate-500 hover:text-slate-900';
+            if (seccionExistente) seccionExistente.classList.add('hidden');
+            if (seccionNuevo) seccionNuevo.classList.remove('hidden');
+            if (selectEstudiante) selectEstudiante.removeAttribute('required');
+            if (inputNuevoNombre) inputNuevoNombre.setAttribute('required', 'required');
+            if (inputNuevoEmail) inputNuevoEmail.setAttribute('required', 'required');
+        } else {
+            inputTipo.value = 'existente';
+            if (tabExistente) tabExistente.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-2xs';
+            if (tabNuevo) tabNuevo.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-slate-500 hover:text-slate-900';
+            if (seccionExistente) seccionExistente.classList.remove('hidden');
+            if (seccionNuevo) seccionNuevo.classList.add('hidden');
+            if (selectEstudiante) selectEstudiante.setAttribute('required', 'required');
+            if (inputNuevoNombre) inputNuevoNombre.removeAttribute('required');
+            if (inputNuevoEmail) inputNuevoEmail.removeAttribute('required');
+        }
+    }
+
     function editarMatricula(id, lista, estado, apoderadoId) {
         const form = document.getElementById('form-editar-matricula');
         form.action = '/matriculas/' + id;

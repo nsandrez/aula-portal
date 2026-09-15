@@ -189,4 +189,40 @@ class CrudFormulariosTest extends TestCase
         $this->assertEquals('Profesor Renombrado', $usuarioCreado->fresh()->name);
         $this->assertEquals(RolUsuario::Administrador, $usuarioCreado->fresh()->rol);
     }
+
+    public function test_administrador_puede_registrar_directamente_un_nuevo_alumno_en_matricula(): void
+    {
+        $admin = User::factory()->create(['rol' => RolUsuario::Administrador]);
+        $curso = Curso::create([
+            'nombre' => '1° Medio A',
+            'nivel' => 'Enseñanza Media',
+            'anio' => 2026,
+        ]);
+
+        $response = $this->actingAs($admin)->post('/matriculas', [
+            'tipo_registro' => 'nuevo',
+            'nombre_estudiante' => 'Camila Paz Morales',
+            'email_estudiante' => 'camila.morales@colegio.cl',
+            'rut_estudiante' => '23456789-1',
+            'curso_id' => $curso->id,
+            'numero_lista' => 5,
+            'anio' => 2026,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('exito');
+
+        $alumnoCreado = User::where('email', 'camila.morales@colegio.cl')->firstOrFail();
+        $this->assertEquals('Camila Paz Morales', $alumnoCreado->name);
+        $this->assertEquals(RolUsuario::Estudiante, $alumnoCreado->rol);
+        $this->assertEquals('23456789-1', $alumnoCreado->rut);
+
+        $this->assertDatabaseHas('matriculas', [
+            'estudiante_id' => $alumnoCreado->id,
+            'curso_id' => $curso->id,
+            'numero_lista' => 5,
+            'anio' => 2026,
+            'estado' => 'regular',
+        ]);
+    }
 }

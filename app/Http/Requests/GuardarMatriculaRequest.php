@@ -28,8 +28,15 @@ class GuardarMatriculaRequest extends FormRequest
      */
     public function rules(): array
     {
+        $esNuevo = $this->input('tipo_registro') === 'nuevo';
+
         return [
-            'estudiante_id' => ['required', 'exists:users,id'],
+            'tipo_registro' => ['nullable', 'in:existente,nuevo'],
+            'estudiante_id' => [$esNuevo ? 'nullable' : 'required', 'exists:users,id'],
+            'nombre_estudiante' => [$esNuevo ? 'required' : 'nullable', 'string', 'max:255'],
+            'email_estudiante' => [$esNuevo ? 'required' : 'nullable', 'string', 'email', 'max:255', 'unique:users,email'],
+            'rut_estudiante' => ['nullable', 'string', 'max:15', 'unique:users,rut'],
+            'password_estudiante' => ['nullable', 'string', 'min:6'],
             'curso_id' => ['required', 'exists:cursos,id'],
             'apoderado_id' => ['nullable', 'exists:users,id'],
             'numero_lista' => ['required', 'integer', 'min:1', 'max:60'],
@@ -45,7 +52,11 @@ class GuardarMatriculaRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'estudiante_id.required' => 'Debe seleccionar un estudiante para matricular.',
+            'estudiante_id.required' => 'Debe seleccionar un estudiante existente para matricular.',
+            'nombre_estudiante.required' => 'El nombre completo del nuevo estudiante es obligatorio.',
+            'email_estudiante.required' => 'El correo del nuevo estudiante es obligatorio.',
+            'email_estudiante.unique' => 'Ya existe una cuenta con este correo electrónico.',
+            'rut_estudiante.unique' => 'Ya existe un usuario con este RUT.',
             'curso_id.required' => 'Debe seleccionar el curso de destino.',
             'numero_lista.required' => 'El número de lista es obligatorio.',
         ];
