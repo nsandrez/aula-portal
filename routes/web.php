@@ -1,7 +1,11 @@
 <?php
 
+use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CursoController;
+use App\Http\Controllers\MatriculaController;
 use App\Http\Controllers\PanelPrincipalController;
+use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas para usuarios invitados (login)
@@ -21,4 +25,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/cursos', [PanelPrincipalController::class, 'mostrarCursos'])->name('cursos.index');
     Route::get('/matriculas', [PanelPrincipalController::class, 'mostrarMatriculas'])->name('matriculas.index');
     Route::get('/usuarios', [PanelPrincipalController::class, 'mostrarUsuarios'])->name('usuarios.index');
+
+    // CRUD Cursos y Asignaciones
+    Route::post('/cursos', [CursoController::class, 'guardar'])->name('cursos.guardar');
+    Route::put('/cursos/{curso}', [CursoController::class, 'actualizar'])->name('cursos.actualizar');
+    Route::post('/cursos/{curso}/asignaturas', [CursoController::class, 'asociarAsignatura'])->name('cursos.asociar_asignatura');
+    Route::delete('/cursos/{curso}/asignaturas/{cursoAsignatura}', [CursoController::class, 'desasociarAsignatura'])->name('cursos.desasociar_asignatura');
+
+    // CRUD Asistencia Diaria
+    Route::post('/asistencias', [AsistenciaController::class, 'guardar'])->name('asistencias.guardar');
+
+    // CRUD Matrículas
+    Route::post('/matriculas', [MatriculaController::class, 'guardar'])->name('matriculas.guardar');
+    Route::put('/matriculas/{matricula}', [MatriculaController::class, 'actualizar'])->name('matriculas.actualizar');
+
+    // CRUD Usuarios (SuperUsuario)
+    Route::post('/usuarios', [UsuarioController::class, 'guardar'])->name('usuarios.guardar');
+    Route::put('/usuarios/{usuario}', [UsuarioController::class, 'actualizar'])->name('usuarios.actualizar');
 });

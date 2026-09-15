@@ -33,8 +33,14 @@
 
         @if($usuario?->tieneRol(\App\Enums\RolUsuario::Docente, \App\Enums\RolUsuario::Administrador, \App\Enums\RolUsuario::SuperUsuario))
             <div class="flex items-center gap-2.5">
-                <button type="button" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer">
-                    Guardar Lista del Día
+                <button type="button" onclick="marcarTodosPresentes()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition-colors cursor-pointer">
+                    Marcar Todos Presentes
+                </button>
+                <button type="submit" form="form-guardar-asistencia" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    <span>Guardar Lista del Día</span>
                 </button>
             </div>
         @endif
@@ -91,82 +97,118 @@
                 <p class="text-[11px] text-slate-500">Sin justificar</p>
             </div>
             <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-xs col-span-2 sm:col-span-1">
-                <span class="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">% Día</span>
+                <span class="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">% Asistencia</span>
                 <p class="text-2xl font-bold text-emerald-600 mt-1">{{ $resumen['porcentaje_asistencia'] }}%</p>
-                <p class="text-[11px] text-slate-500">Asistencia efectiva</p>
+                <p class="text-[11px] text-slate-500">Efectividad del día</p>
             </div>
         </div>
 
-        <!-- Tabla de Asistencia del Día a Día -->
-        <div class="rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden">
-            <div class="p-4 border-b border-slate-200 flex items-center justify-between">
-                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
-                    Nómina Diaria: {{ $cursoSeleccionado?->nombre }}
-                </h3>
-                <span class="text-xs text-slate-500 font-mono">{{ $asistencias->count() }} alumnos evaluados hoy</span>
-            </div>
+        <!-- Formulario Activo para Guardar Asistencias Directamente a la Base de Datos -->
+        <form id="form-guardar-asistencia" action="{{ route('asistencias.guardar') }}" method="POST">
+            @csrf
+            <input type="hidden" name="curso_id" value="{{ $cursoSeleccionado?->id }}">
+            <input type="hidden" name="fecha" value="{{ $fecha }}">
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-slate-700">
-                    <thead class="bg-slate-100/70 text-slate-600 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
-                        <tr>
-                            <th class="px-5 py-3 font-semibold">N°</th>
-                            <th class="px-5 py-3 font-semibold">Estudiante</th>
-                            <th class="px-5 py-3 font-semibold">RUT</th>
-                            <th class="px-5 py-3 text-center font-semibold">Estado del Día</th>
-                            <th class="px-5 py-3 font-semibold">Hora de Ingreso</th>
-                            <th class="px-5 py-3 font-semibold">Observación</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @forelse($asistencias as $indice => $registro)
-                            <tr class="hover:bg-slate-50/80 transition-colors">
-                                <td class="px-5 py-3.5 font-mono text-slate-400 font-medium">
-                                    {{ str_pad((string)($indice + 1), 2, '0', STR_PAD_LEFT) }}
-                                </td>
-                                <td class="px-5 py-3.5 font-bold text-slate-900">
-                                    {{ $registro->estudiante?->name }}
-                                </td>
-                                <td class="px-5 py-3.5 font-mono text-slate-500">
-                                    {{ $registro->estudiante?->rut }}
-                                </td>
-                                <td class="px-5 py-3.5 text-center">
-                                    @if($registro->estado === 'presente')
-                                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                            Presente
-                                        </span>
-                                    @elseif($registro->estado === 'atraso')
-                                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                                            Atraso
-                                        </span>
-                                    @elseif($registro->estado === 'justificado')
-                                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                                            Justificado
-                                        </span>
-                                    @else
-                                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-                                            Ausente
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-5 py-3.5 font-mono text-slate-600">
-                                    {{ $registro->hora_llegada ? substr($registro->hora_llegada, 0, 5) . ' hrs' : '-' }}
-                                </td>
-                                <td class="px-5 py-3.5 text-slate-500 text-xs">
-                                    {{ $registro->observacion ?? '-' }}
-                                </td>
-                            </tr>
-                        @empty
+            <div class="rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden">
+                <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+                        Toma de Asistencia: {{ $cursoSeleccionado?->nombre }} ({{ \Carbon\Carbon::parse($fecha)->format('d/m/Y') }})
+                    </h3>
+                    <span class="text-xs text-slate-500 font-mono">{{ $asistencias->count() }} alumnos en nómina</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-700">
+                        <thead class="bg-slate-100/70 text-slate-600 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
                             <tr>
-                                <td colspan="6" class="px-5 py-8 text-center text-slate-500 text-xs">
-                                    No hay registros de asistencia para la fecha seleccionada ({{ $fecha }}).
-                                </td>
+                                <th class="px-5 py-3 font-semibold">N°</th>
+                                <th class="px-5 py-3 font-semibold">Estudiante</th>
+                                <th class="px-5 py-3 font-semibold">RUT</th>
+                                <th class="px-5 py-3 text-center font-semibold">Estado de Asistencia</th>
+                                <th class="px-5 py-3 font-semibold">Hora de Llegada</th>
+                                <th class="px-5 py-3 font-semibold">Observación / Justificación</th>
                             </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($asistencias as $indice => $registro)
+                                <tr class="hover:bg-slate-50/80 transition-colors">
+                                    <td class="px-5 py-3.5 font-mono text-slate-400 font-medium">
+                                        {{ str_pad((string)($indice + 1), 2, '0', STR_PAD_LEFT) }}
+                                        <input type="hidden" name="asistencias[{{ $indice }}][estudiante_id]" value="{{ $registro->estudiante_id }}">
+                                    </td>
+                                    <td class="px-5 py-3.5 font-bold text-slate-900">
+                                        {{ $registro->estudiante?->name }}
+                                    </td>
+                                    <td class="px-5 py-3.5 font-mono text-slate-500">
+                                        {{ $registro->estudiante?->rut }}
+                                    </td>
+                                    <td class="px-5 py-3.5 text-center">
+                                        <div class="inline-flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                                            <label class="cursor-pointer">
+                                                <input type="radio" name="asistencias[{{ $indice }}][estado]" value="presente" {{ $registro->estado === 'presente' ? 'checked' : '' }} class="estado-presente sr-only peer">
+                                                <span class="px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-600 peer-checked:bg-emerald-600 peer-checked:text-white transition-all block">
+                                                    Presente
+                                                </span>
+                                            </label>
+                                            <label class="cursor-pointer">
+                                                <input type="radio" name="asistencias[{{ $indice }}][estado]" value="atraso" {{ $registro->estado === 'atraso' ? 'checked' : '' }} class="sr-only peer">
+                                                <span class="px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-600 peer-checked:bg-amber-500 peer-checked:text-slate-950 transition-all block">
+                                                    Atraso
+                                                </span>
+                                            </label>
+                                            <label class="cursor-pointer">
+                                                <input type="radio" name="asistencias[{{ $indice }}][estado]" value="justificado" {{ $registro->estado === 'justificado' ? 'checked' : '' }} class="sr-only peer">
+                                                <span class="px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-600 peer-checked:bg-blue-600 peer-checked:text-white transition-all block">
+                                                    Justificado
+                                                </span>
+                                            </label>
+                                            <label class="cursor-pointer">
+                                                <input type="radio" name="asistencias[{{ $indice }}][estado]" value="ausente" {{ $registro->estado === 'ausente' ? 'checked' : '' }} class="sr-only peer">
+                                                <span class="px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-600 peer-checked:bg-red-600 peer-checked:text-white transition-all block">
+                                                    Ausente
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td class="px-5 py-3.5">
+                                        <input type="time" name="asistencias[{{ $indice }}][hora_llegada]" value="{{ $registro->hora_llegada ? substr($registro->hora_llegada, 0, 5) : '' }}" class="px-2 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono text-slate-800 focus:outline-none focus:border-amber-500">
+                                    </td>
+                                    <td class="px-5 py-3.5">
+                                        <input type="text" name="asistencias[{{ $indice }}][observacion]" value="{{ $registro->observacion }}" placeholder="Motivo o comentario..." class="w-full px-2.5 py-1 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-amber-500">
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-5 py-8 text-center text-slate-500 text-xs">
+                                        No hay estudiantes registrados en este curso para la fecha seleccionada.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                @if($asistencias->isNotEmpty())
+                    <div class="p-4 border-t border-slate-100 flex items-center justify-end bg-slate-50/50">
+                        <button type="submit" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                            <span>Guardar Cambios de Asistencia en Base de Datos</span>
+                        </button>
+                    </div>
+                @endif
             </div>
-        </div>
+        </form>
+
+        <script>
+            function marcarTodosPresentes() {
+                document.querySelectorAll('.estado-presente').forEach(radio => {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change'));
+                });
+            }
+        </script>
 
     @elseif($usuario?->esEstudiante())
         <!-- Vista para Estudiante en Blanco Institucional -->

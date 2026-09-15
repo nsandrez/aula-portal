@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\RolUsuario;
+use App\Models\Asignatura;
 use App\Models\Curso;
 use App\Models\Matricula;
 use App\Models\User;
@@ -105,10 +107,14 @@ class PanelPrincipalController extends Controller
     public function mostrarCursos(Request $request, AcademicoService $academicoService): View
     {
         $cursos = $academicoService->obtenerCursosConAsignaturas();
+        $docentes = User::where('rol', RolUsuario::Docente)->orderBy('name')->get();
+        $catalogoAsignaturas = Asignatura::orderBy('nombre')->get();
 
         return view('modulos.cursos', [
             'usuario' => $request->user(),
             'cursos' => $cursos,
+            'docentes' => $docentes,
+            'catalogoAsignaturas' => $catalogoAsignaturas,
         ]);
     }
 
@@ -121,9 +127,16 @@ class PanelPrincipalController extends Controller
             ->where('anio', 2026)
             ->get();
 
+        $estudiantes = User::where('rol', RolUsuario::Estudiante)->orderBy('name')->get();
+        $apoderados = User::where('rol', RolUsuario::Apoderado)->orderBy('name')->get();
+        $cursos = Curso::orderBy('nombre')->get();
+
         return view('modulos.matriculas', [
             'usuario' => $request->user(),
             'matriculas' => $matriculas,
+            'estudiantes' => $estudiantes,
+            'apoderados' => $apoderados,
+            'cursos' => $cursos,
         ]);
     }
 
@@ -133,10 +146,12 @@ class PanelPrincipalController extends Controller
     public function mostrarUsuarios(Request $request): View
     {
         $usuarios = User::orderBy('name')->get();
+        $roles = RolUsuario::cases();
 
         return view('modulos.usuarios', [
             'usuario' => $request->user(),
             'usuarios' => $usuarios,
+            'roles' => $roles,
         ]);
     }
 }

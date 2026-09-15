@@ -228,6 +228,33 @@
 
             <!-- Contenedor de la vista en blanco y grises suaves -->
             <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                <!-- Alerta de Éxito -->
+                @if(session('exito'))
+                    <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center gap-3 shadow-xs">
+                        <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ session('exito') }}</span>
+                    </div>
+                @endif
+
+                <!-- Alerta de Errores -->
+                @if($errors->any())
+                    <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-medium shadow-xs">
+                        <div class="flex items-center gap-2 mb-1.5 font-bold text-red-900">
+                            <svg class="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                            </svg>
+                            <span>Por favor corrige los siguientes inconvenientes:</span>
+                        </div>
+                        <ul class="list-disc list-inside space-y-0.5 text-[11px] text-red-700">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 @yield('contenido')
             </main>
         </div>
