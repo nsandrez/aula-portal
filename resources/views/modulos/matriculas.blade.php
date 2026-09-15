@@ -20,7 +20,13 @@
         </div>
 
         @if(auth()->user()?->tieneRol(\App\Enums\RolUsuario::Administrador, \App\Enums\RolUsuario::SuperUsuario))
-            <div class="flex items-center gap-2.5">
+            <div class="flex flex-wrap items-center gap-2.5">
+                <button type="button" data-abrir-modal="modal-vincular-apoderado" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs rounded-xl border border-slate-300 shadow-xs transition-colors flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                    </svg>
+                    <span>Vincular Pupilos a Apoderado</span>
+                </button>
                 <button type="button" onclick="cambiarTipoMatricula('nuevo'); abrirModal('modal-nueva-matricula');" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer">
                     <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
@@ -75,7 +81,21 @@
                                 </span>
                             </td>
                             <td class="px-5 py-3.5 text-slate-600">
-                                {{ $m->apoderado?->name ?? 'No registrado' }}
+                                @if($m->apoderado)
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="font-bold text-slate-900">{{ $m->apoderado->name }}</span>
+                                        @php
+                                            $totalPupilos = $matriculas->where('apoderado_id', $m->apoderado_id)->count();
+                                        @endphp
+                                        @if($totalPupilos > 1)
+                                            <span class="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200" title="{{ $totalPupilos }} pupilos a cargo de este apoderado">
+                                                {{ $totalPupilos }} pupilos
+                                            </span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-slate-400 italic">No registrado</span>
+                                @endif
                             </td>
                             <td class="px-5 py-3.5 text-center">
                                 @if($m->estado === 'regular')
@@ -208,12 +228,6 @@
                     @endforeach
                 </select>
             </div>
-                    <option value="">-- Sin apoderado registrado --</option>
-                    @foreach($apoderados ?? [] as $apoderado)
-                        <option value="{{ $apoderado->id }}">{{ $apoderado->name }} ({{ $apoderado->rut ?? $apoderado->email }})</option>
-                    @endforeach
-                </select>
-            </div>
 
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button type="button" data-cerrar-modal="modal-nueva-matricula" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-200">
@@ -285,7 +299,112 @@
     </div>
 </div>
 
+<!-- ======================================================== -->
+<!-- MODAL: VINCULAR PUPILOS A APODERADO                      -->
+<!-- ======================================================== -->
+<div id="modal-vincular-apoderado" class="modal-fondo fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+    <div class="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold uppercase mb-1">
+                    Gestión Multifamiliar
+                </div>
+                <h3 class="text-base font-bold text-slate-900">Vincular Pupilos a Apoderado</h3>
+                <p class="text-xs text-slate-500">Asocia uno o más hijos (estudiantes) a un mismo apoderado legal</p>
+            </div>
+            <button type="button" data-cerrar-modal="modal-vincular-apoderado" class="p-1 text-slate-400 hover:text-slate-700 rounded-lg">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <form action="{{ route('matriculas.asociar_apoderado') }}" method="POST" class="mt-4 space-y-4">
+            @csrf
+
+            <!-- Selector de Apoderado -->
+            <div>
+                <label for="vincular-apoderado-id" class="block text-xs font-semibold text-slate-700 mb-1">
+                    Apoderado Responsable
+                </label>
+                <select id="vincular-apoderado-id" name="apoderado_id" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500">
+                    <option value="">-- Selecciona el apoderado --</option>
+                    @foreach($apoderados ?? [] as $apoderado)
+                        @php
+                            $hijosCount = $matriculas->where('apoderado_id', $apoderado->id)->count();
+                        @endphp
+                        <option value="{{ $apoderado->id }}">
+                            {{ $apoderado->name }} ({{ $apoderado->rut ?? $apoderado->email }}) - {{ $hijosCount }} pupilo(s) actual(es)
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Listado de Estudiantes con Checkboxes -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="text-xs font-semibold text-slate-700">
+                        Seleccionar Alumnos a Vincular (Hijos / Pupilos):
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="marcarTodosAlumnos(true)" class="text-[11px] font-bold text-amber-600 hover:text-amber-700 cursor-pointer">
+                            Marcar todos
+                        </button>
+                        <span class="text-slate-300">•</span>
+                        <button type="button" onclick="marcarTodosAlumnos(false)" class="text-[11px] font-bold text-slate-500 hover:text-slate-700 cursor-pointer">
+                            Desmarcar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 divide-y divide-slate-200 p-1">
+                    @forelse($matriculas as $mat)
+                        <label class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white transition-colors cursor-pointer text-xs">
+                            <input type="checkbox" name="estudiante_ids[]" value="{{ $mat->estudiante_id }}" class="checkbox-alumno rounded text-amber-500 focus:ring-amber-400">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <p class="font-bold text-slate-900 truncate">{{ $mat->estudiante?->name }}</p>
+                                    <span class="text-[10px] font-mono text-slate-500">{{ $mat->estudiante?->rut }}</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
+                                    <span class="font-medium text-slate-700">{{ $mat->curso?->nombre }} (N° {{ $mat->numero_lista }})</span>
+                                    <span>•</span>
+                                    <span>Apoderado actual: <strong class="text-slate-700 font-semibold">{{ $mat->apoderado?->name ?? 'Sin asignar' }}</strong></span>
+                                </div>
+                            </div>
+                        </label>
+                    @empty
+                        <div class="p-4 text-center text-xs text-slate-500">
+                            No hay alumnos matriculados disponibles.
+                        </div>
+                    @endforelse
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1.5">
+                    💡 Puedes seleccionar dos o más alumnos para asignarlos a un mismo apoderado legal.
+                </p>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button type="button" data-cerrar-modal="modal-vincular-apoderado" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-200">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-4 py-2 bg-amber-500 text-slate-950 text-xs font-bold rounded-xl hover:bg-amber-600 shadow-xs flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    <span>Guardar Vinculación Familiar</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+    function marcarTodosAlumnos(marcar) {
+        document.querySelectorAll('.checkbox-alumno').forEach(cb => {
+            cb.checked = marcar;
+        });
+    }
     function cambiarTipoMatricula(tipo) {
         const inputTipo = document.getElementById('matricula-tipo-registro');
         const tabExistente = document.getElementById('tab-alumno-existente');

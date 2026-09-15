@@ -211,7 +211,7 @@ class DatabaseSeeder extends Seeder
         // 5. Matrículas de Estudiantes en 1° Medio A
         $matriculas = [
             ['estudiante_id' => $estudianteSofia->id, 'apoderado_id' => $apoderadaMarcela->id, 'lista' => 1],
-            ['estudiante_id' => $estudianteMatias->id, 'apoderado_id' => null, 'lista' => 2],
+            ['estudiante_id' => $estudianteMatias->id, 'apoderado_id' => $apoderadaMarcela->id, 'lista' => 2],
             ['estudiante_id' => $estudianteDaniela->id, 'apoderado_id' => null, 'lista' => 3],
             ['estudiante_id' => $estudianteLucas->id, 'apoderado_id' => null, 'lista' => 4],
         ];

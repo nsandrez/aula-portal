@@ -274,24 +274,143 @@
             </div>
         </div>
     @else
-        <!-- Vista para Apoderado en Blanco Institucional -->
-        <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
-            <h3 class="text-base font-bold text-slate-900">Control de Asistencia del Pupilo</h3>
-            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-sm">
-                        ✓
-                    </div>
-                    <div>
-                        <p class="text-sm font-bold text-slate-900">Sofía Álvarez Contreras (1° Medio A)</p>
-                        <p class="text-xs text-slate-500">Asistencia Registrada Hoy: <strong class="text-emerald-700">Presente (07:55 hrs)</strong></p>
-                    </div>
-                </div>
-                <div class="text-xs font-mono text-slate-700 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
-                    Asistencia General: <span class="font-bold text-emerald-600">100.0%</span>
-                </div>
+        <!-- Vista para Apoderado con Soporte para Múltiples Pupilos -->
+        @if($pupilos->isEmpty())
+            <div class="p-8 rounded-2xl bg-white border border-slate-200 text-center text-slate-500 text-xs">
+                No tienes pupilos registrados a tu cargo actualmente.
             </div>
-        </div>
+        @else
+            <!-- Barra Selectora de Pupilos / Hijos -->
+            @if($pupilos->count() > 1)
+                <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Seleccionar Hijo(a):</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        @foreach($pupilos as $p)
+                            <a href="{{ route('asistencias.index', ['pupilo_id' => $p->estudiante_id]) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 {{ $pupiloSeleccionado?->estudiante_id === $p->estudiante_id ? 'bg-amber-500 text-slate-950 shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200' }}">
+                                <span class="w-2 h-2 rounded-full {{ $pupiloSeleccionado?->estudiante_id === $p->estudiante_id ? 'bg-slate-950' : 'bg-slate-400' }}"></span>
+                                <span>{{ $p->estudiante?->name }}</span>
+                                <span class="text-[11px] opacity-80">({{ $p->curso?->nombre }})</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <!-- Resumen y Estado del Día de Hoy para el Pupilo -->
+            @if($pupiloSeleccionado)
+                <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl {{ ($asistenciaHoyPupilo?->estado ?? 'presente') === 'presente' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }} font-bold flex items-center justify-center text-sm border border-slate-200">
+                                {{ strtoupper(substr($pupiloSeleccionado->estudiante?->name ?? 'P', 0, 2)) }}
+                            </div>
+                            <div>
+                                <h3 class="text-base font-bold text-slate-900">{{ $pupiloSeleccionado->estudiante?->name }}</h3>
+                                <p class="text-xs text-slate-500">
+                                    {{ $pupiloSeleccionado->curso?->nombre }} • RUT: <span class="font-mono">{{ $pupiloSeleccionado->estudiante?->rut ?? 'Sin RUT' }}</span> • N° Lista: {{ $pupiloSeleccionado->numero_lista }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Estado de Hoy -->
+                        <div class="flex items-center gap-3">
+                            <div class="text-right">
+                                <span class="text-[11px] text-slate-400 block font-medium">Asistencia Hoy:</span>
+                                @if(($asistenciaHoyPupilo?->estado ?? 'presente') === 'presente')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        <span>Presente ({{ $asistenciaHoyPupilo?->hora_llegada ? substr($asistenciaHoyPupilo->hora_llegada, 0, 5) : '07:55' }} hrs)</span>
+                                    </span>
+                                @elseif(($asistenciaHoyPupilo?->estado ?? '') === 'atraso')
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        <span>Atraso ({{ $asistenciaHoyPupilo?->hora_llegada ? substr($asistenciaHoyPupilo->hora_llegada, 0, 5) : '08:20' }} hrs)</span>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                        <span>Justificado</span>
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Métricas de Asistencia del Pupilo -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Asistencia Acumulada</span>
+                        <p class="text-3xl font-bold text-emerald-600 mt-2">{{ $porcentajeEstudiante }}%</p>
+                        <p class="text-xs text-slate-500 mt-1">Mínimo legal de aprobación escolar: 85%</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Jornadas Evaluadas</span>
+                        <p class="text-3xl font-bold text-slate-900 mt-2">{{ $historialEstudiante?->count() ?? 0 }} Días</p>
+                        <p class="text-xs text-slate-500 mt-1">Primer Semestre 2026</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Condición Escolar</span>
+                        <p class="text-2xl font-bold text-emerald-600 mt-2">Alumno Regular</p>
+                        <p class="text-xs text-slate-500 mt-1">Al día con la asistencia escolar</p>
+                    </div>
+                </div>
+
+                <!-- Tabla de Historial Día a Día del Pupilo -->
+                <div class="rounded-2xl bg-white border border-slate-200 shadow-xs p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+                            Historial Reciente Día a Día - {{ $pupiloSeleccionado->estudiante?->name }}
+                        </h3>
+                        <span class="text-xs text-slate-500 font-mono">{{ $pupiloSeleccionado->curso?->nombre }}</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-700">
+                            <thead class="bg-slate-100/70 text-slate-600 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th class="px-5 py-3 font-semibold">Fecha</th>
+                                    <th class="px-5 py-3 font-semibold">Hora de Ingreso</th>
+                                    <th class="px-5 py-3 font-semibold">Estado</th>
+                                    <th class="px-5 py-3 font-semibold">Observación / Justificación</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @forelse($historialEstudiante ?? [] as $asistencia)
+                                    <tr class="hover:bg-slate-50/80 transition-colors">
+                                        <td class="px-5 py-3.5 font-mono text-slate-900 font-semibold">
+                                            {{ \Carbon\Carbon::parse($asistencia->fecha)->format('d/m/Y') }}
+                                        </td>
+                                        <td class="px-5 py-3.5 font-mono text-slate-600">
+                                            {{ $asistencia->hora_llegada ? substr($asistencia->hora_llegada, 0, 5) . ' hrs' : '-' }}
+                                        </td>
+                                        <td class="px-5 py-3.5">
+                                            @if($asistencia->estado === 'presente')
+                                                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Presente</span>
+                                            @elseif($asistencia->estado === 'atraso')
+                                                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Atraso</span>
+                                            @elseif($asistencia->estado === 'justificado')
+                                                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">Justificado</span>
+                                            @else
+                                                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">Ausente</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-5 py-3.5 text-slate-500">
+                                            {{ $asistencia->observacion ?? 'Normal' }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="px-5 py-6 text-center text-slate-500">Sin historial de asistencias disponible para este pupilo.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+        @endif
     @endif
 </div>
 @endsection

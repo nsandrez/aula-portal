@@ -70,4 +70,31 @@ class MatriculaController extends Controller
 
         return back()->with('exito', "La matrícula de {$matricula->estudiante->name} ha sido actualizada.");
     }
+
+    /**
+     * Asocia uno o múltiples estudiantes (pupilos) a un apoderado.
+     */
+    public function asociarApoderado(Request $request): RedirectResponse
+    {
+        $datosValidados = $request->validate([
+            'apoderado_id' => ['required', 'exists:users,id'],
+            'estudiante_ids' => ['required', 'array', 'min:1'],
+            'estudiante_ids.*' => ['exists:users,id'],
+        ]);
+
+        $apoderado = User::findOrFail($datosValidados['apoderado_id']);
+
+        Matricula::whereIn('estudiante_id', $datosValidados['estudiante_ids'])
+            ->where('anio', 2026)
+            ->update([
+                'apoderado_id' => $apoderado->id,
+            ]);
+
+        $cantidad = count($datosValidados['estudiante_ids']);
+
+        return back()->with(
+            'exito',
+            "Se han vinculado exitosamente {$cantidad} pupilo(s) al apoderado(a) {$apoderado->name}."
+        );
+    }
 }
