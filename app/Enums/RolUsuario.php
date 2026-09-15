@@ -32,11 +32,11 @@ enum RolUsuario: string
     public function obtenerClasesInsignia(): string
     {
         return match ($this) {
-            self::SuperUsuario => 'bg-purple-950/60 text-purple-300 border-purple-800/40',
-            self::Administrador => 'bg-blue-950/60 text-blue-300 border-blue-800/40',
-            self::Docente => 'bg-amber-950/60 text-amber-300 border-amber-800/40',
-            self::Estudiante => 'bg-emerald-950/60 text-emerald-300 border-emerald-800/40',
-            self::Apoderado => 'bg-orange-950/60 text-orange-300 border-orange-800/40',
+            self::SuperUsuario => 'bg-purple-50 text-purple-700 border-purple-200',
+            self::Administrador => 'bg-blue-50 text-blue-700 border-blue-200',
+            self::Docente => 'bg-amber-50 text-amber-800 border-amber-200',
+            self::Estudiante => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+            self::Apoderado => 'bg-orange-50 text-orange-800 border-orange-200',
         };
     }
 }
