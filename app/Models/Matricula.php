@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Utils\PeriodoEscolar;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -45,5 +48,16 @@ class Matricula extends Model
     public function apoderado(): BelongsTo
     {
         return $this->belongsTo(User::class, 'apoderado_id');
+    }
+
+    /**
+     * Filtra las matrículas del año escolar vigente.
+     *
+     * @param  Builder<Matricula>  $consulta
+     */
+    #[Scope]
+    protected function delAnioVigente(Builder $consulta): void
+    {
+        $consulta->where('anio', PeriodoEscolar::anioVigente());
     }
 }

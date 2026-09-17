@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Asistencia;
 use App\Models\Curso;
+use App\Models\Matricula;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -23,6 +24,60 @@ class AsistenciaService
             ->where('curso_id', $cursoId)
             ->whereDate('fecha', $fecha)
             ->get();
+    }
+
+    /**
+     * Arma la lista para pasar asistencia: un registro por cada estudiante regular del curso.
+     * Si el día aún no se ha guardado, cada estudiante aparece como "presente" sin guardar.
+     * Los registros ya guardados de estudiantes sin matrícula vigente se agregan al final.
+     *
+     * @return Collection<int, Asistencia>
+     */
+    public function obtenerListaParaPaseDeLista(int $cursoId, string $fecha): Collection
+    {
+        $asistenciasGuardadas = $this->obtenerAsistenciaPorCursoYFecha($cursoId, $fecha)->keyBy('estudiante_id');
+
+        $matriculas = Matricula::query()
+            ->with('estudiante')
+            ->where('curso_id', $cursoId)
+            ->where('estado', 'regular')
+            ->delAnioVigente()
+            ->orderBy('numero_lista')
+            ->get();
+
+        $listaMatriculados = $matriculas->map(function (Matricula $matricula) use ($asistenciasGuardadas, $cursoId, $fecha): Asistencia {
+            $asistencia = $asistenciasGuardadas->get($matricula->estudiante_id);
+
+            if ($asistencia === null) {
+                $asistencia = new Asistencia([
+                    'curso_id' => $cursoId,
+                    'estudiante_id' => $matricula->estudiante_id,
+                    'fecha' => $fecha,
+                    'estado' => 'presente',
+                ]);
+                $asistencia->setRelation('estudiante', $matricula->estudiante);
+            }
+
+            return $asistencia;
+        });
+
+        $estudiantesMatriculados = $matriculas->pluck('estudiante_id')->all();
+        $guardadasSinMatriculaVigente = $asistenciasGuardadas->reject(
+            fn (Asistencia $asistencia): bool => in_array($asistencia->estudiante_id, $estudiantesMatriculados, true)
+        );
+
+        return $listaMatriculados->concat($guardadasSinMatriculaVigente->values());
+    }
+
+    /**
+     * Indica si la asistencia de un curso ya fue guardada para la fecha.
+     */
+    public function estaAsistenciaGuardada(int $cursoId, string $fecha): bool
+    {
+        return Asistencia::query()
+            ->where('curso_id', $cursoId)
+            ->whereDate('fecha', $fecha)
+            ->exists();
     }
 
     /**
@@ -112,5 +167,20 @@ class AsistenciaService
             ->count();
 
         return round(($asistidos / $totalDias) * 100, 1);
+    }
+
+    /**
+     * Agrega a cada matrícula el porcentaje de asistencia de su estudiante.
+     *
+     * @param  Collection<int, Matricula>  $matriculas
+     * @return Collection<int, Matricula>
+     */
+    public function agregarPorcentajeAsistencia(Collection $matriculas): Collection
+    {
+        return $matriculas->each(function (Matricula $matricula): void {
+            $matricula->porcentaje_asistencia = $matricula->estudiante
+                ? $this->calcularPorcentajeEstudiante($matricula->estudiante)
+                : 100.0;
+        });
     }
 }

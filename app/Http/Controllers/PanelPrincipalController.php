@@ -5,58 +5,44 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\RolUsuario;
-use App\Models\Asignatura;
-use App\Models\Curso;
-use App\Models\Matricula;
-use App\Models\User;
 use App\Services\AcademicoService;
 use App\Services\AsistenciaService;
+use App\Services\MatriculaService;
+use App\Services\UsuarioService;
+use App\Utils\PeriodoEscolar;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PanelPrincipalController extends Controller
 {
+    public function __construct(
+        private AcademicoService $academicoService,
+        private AsistenciaService $asistenciaService,
+    ) {}
+
     /**
      * Muestra el panel principal del portal escolar según el rol del usuario.
      */
-    public function mostrarPanel(
-        Request $request,
-        AcademicoService $academicoService,
-        AsistenciaService $asistenciaService
-    ): View {
+    public function mostrarPanel(Request $request, MatriculaService $matriculaService): View
+    {
         $usuario = $request->user();
-
-        $cursos = $academicoService->obtenerCursosConAsignaturas();
-        $totalEstudiantes = Matricula::where('anio', 2026)->count();
-
-        // Resumen para estudiante o apoderado
         $matriculaEstudiante = null;
         $porcentajeAsistencia = 100.0;
         $pupilos = collect();
 
         if ($usuario?->esEstudiante()) {
-            $matriculaEstudiante = $academicoService->obtenerMatriculaVigente($usuario);
-            $porcentajeAsistencia = $asistenciaService->calcularPorcentajeEstudiante($usuario);
+            $matriculaEstudiante = $this->academicoService->obtenerMatriculaVigente($usuario);
+            $porcentajeAsistencia = $this->asistenciaService->calcularPorcentajeEstudiante($usuario);
         } elseif ($usuario?->esApoderado()) {
-            $pupilos = $usuario->pupilosMatriculados()
-                ->with(['estudiante', 'curso.profesorJefe'])
-                ->where('anio', 2026)
-                ->get()
-                ->map(function (Matricula $matricula) use ($asistenciaService) {
-                    if ($matricula->estudiante) {
-                        $matricula->porcentaje_asistencia = $asistenciaService->calcularPorcentajeEstudiante($matricula->estudiante);
-                    } else {
-                        $matricula->porcentaje_asistencia = 100.0;
-                    }
-
-                    return $matricula;
-                });
+            $pupilos = $this->asistenciaService->agregarPorcentajeAsistencia(
+                $this->academicoService->obtenerPupilosDelAnio($usuario, ['estudiante', 'curso.profesorJefe'])
+            );
         }
 
         return view('dashboard', [
             'usuario' => $usuario,
-            'cursos' => $cursos,
-            'totalEstudiantes' => $totalEstudiantes,
+            'cursos' => $this->academicoService->obtenerCursosConAsignaturas(),
+            'totalEstudiantes' => $matriculaService->contarEstudiantesMatriculados(),
             'matriculaEstudiante' => $matriculaEstudiante,
             'porcentajeAsistencia' => $porcentajeAsistencia,
             'pupilos' => $pupilos,
@@ -66,34 +52,27 @@ class PanelPrincipalController extends Controller
     /**
      * Muestra la vista del módulo de calificaciones y notas.
      */
-    public function mostrarNotas(Request $request, AcademicoService $academicoService): View
+    public function mostrarNotas(Request $request): View
     {
         $usuario = $request->user();
-        $cursos = $academicoService->obtenerCursosConAsignaturas();
         $matriculaEstudiante = null;
         $pupilos = collect();
         $pupiloSeleccionado = null;
 
         if ($usuario?->esEstudiante()) {
-            $matriculaEstudiante = $academicoService->obtenerMatriculaVigente($usuario);
+            $matriculaEstudiante = $this->academicoService->obtenerMatriculaVigente($usuario);
         } elseif ($usuario?->esApoderado()) {
-            $pupilos = $usuario->pupilosMatriculados()
-                ->with(['estudiante', 'curso.cursoAsignaturas.asignatura', 'curso.cursoAsignaturas.docente'])
-                ->where('anio', 2026)
-                ->get();
-
-            $pupiloId = $request->query('pupilo_id');
-            if ($pupiloId) {
-                $pupiloSeleccionado = $pupilos->firstWhere('estudiante_id', (int) $pupiloId);
-            }
-            if (! $pupiloSeleccionado && $pupilos->isNotEmpty()) {
-                $pupiloSeleccionado = $pupilos->first();
-            }
+            $pupilos = $this->academicoService->obtenerPupilosDelAnio($usuario, [
+                'estudiante',
+                'curso.cursoAsignaturas.asignatura',
+                'curso.cursoAsignaturas.docente',
+            ]);
+            $pupiloSeleccionado = $this->academicoService->seleccionarPupilo($pupilos, $request->query('pupilo_id'));
         }
 
         return view('modulos.notas', [
             'usuario' => $usuario,
-            'cursos' => $cursos,
+            'cursos' => $this->academicoService->obtenerCursosConAsignaturas(),
             'matriculaEstudiante' => $matriculaEstudiante,
             'pupilos' => $pupilos,
             'pupiloSeleccionado' => $pupiloSeleccionado,
@@ -103,19 +82,15 @@ class PanelPrincipalController extends Controller
     /**
      * Muestra la vista del módulo de control de asistencias día a día.
      */
-    public function mostrarAsistencias(Request $request, AsistenciaService $asistenciaService): View
+    public function mostrarAsistencias(Request $request): View
     {
         $usuario = $request->user();
-        $fecha = (string) $request->query('fecha', '2026-09-15');
-        $cursoId = (int) $request->query('curso_id', 1);
+        $fecha = (string) $request->query('fecha', PeriodoEscolar::fechaDeHoy());
 
-        $cursos = Curso::orderBy('nombre')->get();
-        $cursoSeleccionado = Curso::find($cursoId) ?? $cursos->first();
+        $cursos = $this->academicoService->obtenerCursosOrdenados();
+        $cursoSeleccionado = $cursos->firstWhere('id', (int) $request->query('curso_id')) ?? $cursos->first();
+        $cursoId = $cursoSeleccionado?->id ?? 0;
 
-        $asistencias = $asistenciaService->obtenerAsistenciaPorCursoYFecha($cursoSeleccionado?->id ?? 1, $fecha);
-        $resumen = $asistenciaService->calcularResumenCurso($cursoSeleccionado?->id ?? 1, $fecha);
-
-        // Si es estudiante o apoderado, obtenemos el historial individual
         $historialEstudiante = null;
         $porcentajeEstudiante = 100.0;
         $pupilos = collect();
@@ -123,28 +98,16 @@ class PanelPrincipalController extends Controller
         $asistenciaHoyPupilo = null;
 
         if ($usuario?->esEstudiante()) {
-            $historialEstudiante = $asistenciaService->obtenerHistorialEstudiante($usuario);
-            $porcentajeEstudiante = $asistenciaService->calcularPorcentajeEstudiante($usuario);
+            $historialEstudiante = $this->asistenciaService->obtenerHistorialEstudiante($usuario);
+            $porcentajeEstudiante = $this->asistenciaService->calcularPorcentajeEstudiante($usuario);
         } elseif ($usuario?->esApoderado()) {
-            $pupilos = $usuario->pupilosMatriculados()
-                ->with(['estudiante', 'curso'])
-                ->where('anio', 2026)
-                ->get();
+            $pupilos = $this->academicoService->obtenerPupilosDelAnio($usuario);
+            $pupiloSeleccionado = $this->academicoService->seleccionarPupilo($pupilos, $request->query('pupilo_id'));
 
-            $pupiloId = $request->query('pupilo_id');
-            if ($pupiloId) {
-                $pupiloSeleccionado = $pupilos->firstWhere('estudiante_id', (int) $pupiloId);
-            }
-            if (! $pupiloSeleccionado && $pupilos->isNotEmpty()) {
-                $pupiloSeleccionado = $pupilos->first();
-            }
-
-            if ($pupiloSeleccionado && $pupiloSeleccionado->estudiante) {
-                $historialEstudiante = $asistenciaService->obtenerHistorialEstudiante($pupiloSeleccionado->estudiante);
-                $porcentajeEstudiante = $asistenciaService->calcularPorcentajeEstudiante($pupiloSeleccionado->estudiante);
-                $asistenciaHoyPupilo = $historialEstudiante->firstWhere('fecha', $fecha)
-                    ?? $historialEstudiante->firstWhere('fecha', '2026-09-15')
-                    ?? $historialEstudiante->first();
+            if ($pupiloSeleccionado?->estudiante) {
+                $historialEstudiante = $this->asistenciaService->obtenerHistorialEstudiante($pupiloSeleccionado->estudiante);
+                $porcentajeEstudiante = $this->asistenciaService->calcularPorcentajeEstudiante($pupiloSeleccionado->estudiante);
+                $asistenciaHoyPupilo = $historialEstudiante->firstWhere('fecha', $fecha) ?? $historialEstudiante->first();
             }
         }
 
@@ -153,8 +116,9 @@ class PanelPrincipalController extends Controller
             'cursos' => $cursos,
             'cursoSeleccionado' => $cursoSeleccionado,
             'fecha' => $fecha,
-            'asistencias' => $asistencias,
-            'resumen' => $resumen,
+            'asistencias' => $this->asistenciaService->obtenerListaParaPaseDeLista($cursoId, $fecha),
+            'asistenciaGuardada' => $this->asistenciaService->estaAsistenciaGuardada($cursoId, $fecha),
+            'resumen' => $this->asistenciaService->calcularResumenCurso($cursoId, $fecha),
             'historialEstudiante' => $historialEstudiante,
             'porcentajeEstudiante' => $porcentajeEstudiante,
             'pupilos' => $pupilos,
@@ -166,54 +130,43 @@ class PanelPrincipalController extends Controller
     /**
      * Muestra la vista de gestión de cursos y sus asignaturas asociadas.
      */
-    public function mostrarCursos(Request $request, AcademicoService $academicoService): View
+    public function mostrarCursos(Request $request, UsuarioService $usuarioService): View
     {
-        $cursos = $academicoService->obtenerCursosConAsignaturas();
-        $docentes = User::where('rol', RolUsuario::Docente)->orderBy('name')->get();
-        $catalogoAsignaturas = Asignatura::orderBy('nombre')->get();
-
         return view('modulos.cursos', [
             'usuario' => $request->user(),
-            'cursos' => $cursos,
-            'docentes' => $docentes,
-            'catalogoAsignaturas' => $catalogoAsignaturas,
+            'cursos' => $this->academicoService->obtenerCursosConAsignaturas(),
+            'docentes' => $usuarioService->obtenerUsuariosPorRol(RolUsuario::Docente),
+            'catalogoAsignaturas' => $this->academicoService->obtenerCatalogoAsignaturas(),
         ]);
     }
 
     /**
      * Muestra la vista de matrículas y estudiantes.
      */
-    public function mostrarMatriculas(Request $request): View
-    {
-        $matriculas = Matricula::with(['estudiante', 'curso', 'apoderado'])
-            ->where('anio', 2026)
-            ->get();
-
-        $estudiantes = User::where('rol', RolUsuario::Estudiante)->orderBy('name')->get();
-        $apoderados = User::where('rol', RolUsuario::Apoderado)->orderBy('name')->get();
-        $cursos = Curso::orderBy('nombre')->get();
-
+    public function mostrarMatriculas(
+        Request $request,
+        MatriculaService $matriculaService,
+        UsuarioService $usuarioService
+    ): View {
         return view('modulos.matriculas', [
             'usuario' => $request->user(),
-            'matriculas' => $matriculas,
-            'estudiantes' => $estudiantes,
-            'apoderados' => $apoderados,
-            'cursos' => $cursos,
+            'matriculas' => $matriculaService->obtenerMatriculasDelAnio(),
+            'estudiantes' => $usuarioService->obtenerUsuariosPorRol(RolUsuario::Estudiante),
+            'apoderados' => $usuarioService->obtenerUsuariosPorRol(RolUsuario::Apoderado),
+            'cursos' => $this->academicoService->obtenerCursosOrdenados(),
+            'anioVigente' => $matriculaService->obtenerAnioVigente(),
         ]);
     }
 
     /**
      * Muestra la vista de administración de usuarios y roles.
      */
-    public function mostrarUsuarios(Request $request): View
+    public function mostrarUsuarios(Request $request, UsuarioService $usuarioService): View
     {
-        $usuarios = User::orderBy('name')->get();
-        $roles = RolUsuario::cases();
-
         return view('modulos.usuarios', [
             'usuario' => $request->user(),
-            'usuarios' => $usuarios,
-            'roles' => $roles,
+            'usuarios' => $usuarioService->obtenerUsuariosOrdenados(),
+            'roles' => RolUsuario::cases(),
         ]);
     }
 }

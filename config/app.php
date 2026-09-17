@@ -86,6 +86,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Año Escolar Vigente
+    |--------------------------------------------------------------------------
+    |
+    | Año que usan matrículas, paneles y reportes como periodo activo.
+    |
+    */
+
+    'anio_escolar' => (int) env('ANIO_ESCOLAR', 2026),
+
+    'zona_horaria_escolar' => env('ZONA_HORARIA_ESCOLAR', 'America/Santiago'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
     |
