@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Asistencia;
 use App\Models\Curso;
+use App\Models\Matricula;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -112,5 +113,20 @@ class AsistenciaService
             ->count();
 
         return round(($asistidos / $totalDias) * 100, 1);
+    }
+
+    /**
+     * Agrega a cada matrícula el porcentaje de asistencia de su estudiante.
+     *
+     * @param  Collection<int, Matricula>  $matriculas
+     * @return Collection<int, Matricula>
+     */
+    public function agregarPorcentajeAsistencia(Collection $matriculas): Collection
+    {
+        return $matriculas->each(function (Matricula $matricula): void {
+            $matricula->porcentaje_asistencia = $matricula->estudiante
+                ? $this->calcularPorcentajeEstudiante($matricula->estudiante)
+                : 100.0;
+        });
     }
 }
