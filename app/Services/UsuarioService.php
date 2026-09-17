@@ -75,8 +75,9 @@ class UsuarioService
         $rutLimpio = FormateadorRut::limpiarRut($texto);
         $buscaPorRut = preg_match('/^\d{7,9}[0-9kK]?$/', $rutLimpio) === 1;
 
+        $textoNormalizado = User::normalizarNombre($texto);
         $palabras = array_values(array_filter(
-            preg_split('/\s+/', $texto) ?: [],
+            preg_split('/\s+/', $textoNormalizado) ?: [],
             fn (string $p): bool => mb_strlen($p) >= 2
         ));
 

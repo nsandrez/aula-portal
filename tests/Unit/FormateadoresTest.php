@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use App\Models\User;
 use App\Utils\FormateadorFecha;
 use App\Utils\FormateadorRut;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -48,5 +49,13 @@ class FormateadoresTest extends TestCase
         $this->assertSame('15-09-2026', FormateadorFecha::formatearFecha('2026-09-15'));
         $this->assertSame('', FormateadorFecha::formatearFecha(null));
         $this->assertSame('95,5%', FormateadorFecha::formatearPorcentaje(95.46));
+    }
+
+    public function test_normalizar_nombre_convierte_a_mayusculas_y_elimina_tildes(): void
+    {
+        $this->assertSame('MATIAS PEREZ ALVAREZ', User::normalizarNombre('Matías Pérez Álvarez'));
+        $this->assertSame('GUILLERMO AGUERO MUÑOZ', User::normalizarNombre('  Guillermo Agüero Muñoz  '));
+        $this->assertSame('ANDRES SEBASTIAN OSORES', User::normalizarNombre('ANDRÉS SEBASTIÁN ÓSORES'));
+        $this->assertSame('RAUL LEOPOLDO', User::normalizarNombre('Raúl    Leopoldo'));
     }
 }

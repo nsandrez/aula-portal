@@ -175,7 +175,7 @@ class CrudFormulariosTest extends TestCase
         $responseCrear->assertSessionHas('exito');
 
         $usuarioCreado = User::where('email', 'profesor.nuevo@aula-portal.cl')->firstOrFail();
-        $this->assertEquals('Profesor Nuevo', $usuarioCreado->name);
+        $this->assertEquals('PROFESOR NUEVO', $usuarioCreado->name);
 
         // Editar usuario
         $responseEditar = $this->actingAs($superAdmin)->put("/usuarios/{$usuarioCreado->id}", [
@@ -187,7 +187,7 @@ class CrudFormulariosTest extends TestCase
 
         $responseEditar->assertRedirect();
         $responseEditar->assertSessionHas('exito');
-        $this->assertEquals('Profesor Renombrado', $usuarioCreado->fresh()->name);
+        $this->assertEquals('PROFESOR RENOMBRADO', $usuarioCreado->fresh()->name);
         $this->assertEquals(RolUsuario::Administrador, $usuarioCreado->fresh()->rol);
     }
 
@@ -214,7 +214,7 @@ class CrudFormulariosTest extends TestCase
         $response->assertSessionHas('exito');
 
         $alumnoCreado = User::where('email', 'camila.morales@colegio.cl')->firstOrFail();
-        $this->assertEquals('Camila Paz Morales', $alumnoCreado->name);
+        $this->assertEquals('CAMILA PAZ MORALES', $alumnoCreado->name);
         $this->assertEquals(RolUsuario::Estudiante, $alumnoCreado->rol);
         $this->assertEquals('23456789-1', $alumnoCreado->rut);
 

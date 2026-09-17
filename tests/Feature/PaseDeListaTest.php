@@ -46,9 +46,9 @@ class PaseDeListaTest extends TestCase
         $this->actingAs($docente)
             ->get(route('asistencias.index', ['curso_id' => $curso->id]))
             ->assertOk()
-            ->assertSee('Amanda Pérez')
-            ->assertSee('Bruno Díaz')
-            ->assertDontSee('Carla Retirada');
+            ->assertSee('AMANDA PEREZ')
+            ->assertSee('BRUNO DIAZ')
+            ->assertDontSee('CARLA RETIRADA');
     }
 
     public function test_solo_se_puede_guardar_la_asistencia_del_dia_de_hoy(): void

@@ -41,9 +41,9 @@ class BusquedaEstudiantesTest extends TestCase
                 ->getJson(route('matriculas.buscar_estudiantes', ['busqueda' => $busqueda]))
                 ->assertOk()
                 ->assertJsonCount(1, 'estudiantes')
-                ->assertJsonPath('estudiantes.0.nombre', 'Sofía Álvarez Contreras')
+                ->assertJsonPath('estudiantes.0.nombre', 'SOFIA ALVAREZ CONTRERAS')
                 ->assertJsonPath('estudiantes.0.rut', '44444444-4')
-                ->assertJsonPath('estudiantes.0.apoderado_actual', 'Marcela Contreras');
+                ->assertJsonPath('estudiantes.0.apoderado_actual', 'MARCELA CONTRERAS');
         }
     }
 
@@ -53,7 +53,7 @@ class BusquedaEstudiantesTest extends TestCase
             ->getJson(route('matriculas.buscar_estudiantes', ['busqueda' => 'Lucas Díaz']))
             ->assertOk()
             ->assertJsonCount(1, 'estudiantes')
-            ->assertJsonPath('estudiantes.0.nombre', 'Lucas Díaz Herrera');
+            ->assertJsonPath('estudiantes.0.nombre', 'LUCAS DIAZ HERRERA');
     }
 
     public function test_rechaza_busqueda_de_un_solo_nombre_sin_apellido(): void
