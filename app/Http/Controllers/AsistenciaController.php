@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\GuardarAsistenciaRequest;
 use App\Services\AsistenciaService;
+use App\Utils\FormateadorFecha;
 use Illuminate\Http\RedirectResponse;
 
 class AsistenciaController extends Controller
@@ -28,6 +29,6 @@ class AsistenciaController extends Controller
 
         return redirect()
             ->route('asistencias.index', ['curso_id' => $cursoId, 'fecha' => $fecha])
-            ->with('exito', "La asistencia del {$fecha} ha sido guardada exitosamente en la base de datos.");
+            ->with('exito', 'Asistencia del '.FormateadorFecha::formatearFecha($fecha).' guardada.');
     }
 }

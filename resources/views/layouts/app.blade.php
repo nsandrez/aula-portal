@@ -28,7 +28,7 @@
         <div id="sidebar-backdrop" class="fixed inset-0 z-40 hidden bg-slate-900/50 lg:hidden"></div>
 
         {{-- Menú lateral --}}
-        <aside id="sidebar-movil" class="fixed inset-y-0 left-0 z-50 flex w-72 -translate-x-full flex-col border-r border-slate-200 bg-white transition-transform duration-200 lg:static lg:translate-x-0">
+        <aside id="sidebar-movil" class="fixed inset-y-0 left-0 z-50 flex w-72 -translate-x-full flex-col border-r border-slate-200 bg-white transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0">
             <div class="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
                 <a href="{{ route('home') }}" class="flex items-center gap-3">
                     <img src="{{ asset('images/school-logo.svg') }}" alt="" class="size-10">

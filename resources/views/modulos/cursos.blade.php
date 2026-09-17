@@ -33,7 +33,7 @@
                         Profesor(a) jefe: {{ $curso->profesorJefe?->name ?? 'Por asignar' }}
                     </p>
                 </div>
-                <div class="flex flex-wrap gap-2">
+                <div class="flex shrink-0 flex-wrap gap-2">
                     @if($esGestion)
                         <button type="button" data-asociar-en-curso="{{ $curso->id }}" class="boton-secundario">
                             <x-icono nombre="mas" clase="size-5" />

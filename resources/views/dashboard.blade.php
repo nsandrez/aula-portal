@@ -72,6 +72,7 @@
     @endif
 
     {{-- Accesos rápidos --}}
+    @unless($usuario?->esApoderado())
     <section class="space-y-4">
         <h2 class="titulo-seccion">Accesos rápidos</h2>
 
@@ -108,4 +109,5 @@
             @endif
         </div>
     </section>
+    @endunless
 @endsection

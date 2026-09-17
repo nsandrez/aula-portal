@@ -46,7 +46,14 @@
                 @endif
             </div>
 
-            <p class="flex flex-wrap gap-2 text-base" aria-label="Resumen del día">
+            @if(! $asistenciaGuardada && $asistencias->isNotEmpty())
+                <p class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-base text-amber-900" role="status">
+                    La asistencia de este día todavía no se ha guardado. Todos aparecen como «Presente»:
+                    cambia solo a quienes faltaron o llegaron tarde y presiona «Guardar asistencia».
+                </p>
+            @endif
+
+            <p @class(['flex flex-wrap gap-2 text-base', 'hidden' => ! $asistenciaGuardada]) aria-label="Resumen del día">
                 <span class="insignia-verde">{{ $resumen['presentes'] }} presentes</span>
                 <span class="insignia-amarilla">{{ $resumen['atrasos'] }} atrasos</span>
                 <span class="insignia-gris">{{ $resumen['justificados'] }} justificados</span>
