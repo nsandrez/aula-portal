@@ -27,6 +27,60 @@ class AsistenciaService
     }
 
     /**
+     * Arma la lista para pasar asistencia: un registro por cada estudiante regular del curso.
+     * Si el día aún no se ha guardado, cada estudiante aparece como "presente" sin guardar.
+     * Los registros ya guardados de estudiantes sin matrícula vigente se agregan al final.
+     *
+     * @return Collection<int, Asistencia>
+     */
+    public function obtenerListaParaPaseDeLista(int $cursoId, string $fecha): Collection
+    {
+        $asistenciasGuardadas = $this->obtenerAsistenciaPorCursoYFecha($cursoId, $fecha)->keyBy('estudiante_id');
+
+        $matriculas = Matricula::query()
+            ->with('estudiante')
+            ->where('curso_id', $cursoId)
+            ->where('estado', 'regular')
+            ->delAnioVigente()
+            ->orderBy('numero_lista')
+            ->get();
+
+        $listaMatriculados = $matriculas->map(function (Matricula $matricula) use ($asistenciasGuardadas, $cursoId, $fecha): Asistencia {
+            $asistencia = $asistenciasGuardadas->get($matricula->estudiante_id);
+
+            if ($asistencia === null) {
+                $asistencia = new Asistencia([
+                    'curso_id' => $cursoId,
+                    'estudiante_id' => $matricula->estudiante_id,
+                    'fecha' => $fecha,
+                    'estado' => 'presente',
+                ]);
+                $asistencia->setRelation('estudiante', $matricula->estudiante);
+            }
+
+            return $asistencia;
+        });
+
+        $estudiantesMatriculados = $matriculas->pluck('estudiante_id')->all();
+        $guardadasSinMatriculaVigente = $asistenciasGuardadas->reject(
+            fn (Asistencia $asistencia): bool => in_array($asistencia->estudiante_id, $estudiantesMatriculados, true)
+        );
+
+        return $listaMatriculados->concat($guardadasSinMatriculaVigente->values());
+    }
+
+    /**
+     * Indica si la asistencia de un curso ya fue guardada para la fecha.
+     */
+    public function estaAsistenciaGuardada(int $cursoId, string $fecha): bool
+    {
+        return Asistencia::query()
+            ->where('curso_id', $cursoId)
+            ->whereDate('fecha', $fecha)
+            ->exists();
+    }
+
+    /**
      * Guarda o actualiza la asistencia de múltiples alumnos para un curso en una fecha.
      *
      * @param  array<int, array{estudiante_id: int, estado: string, hora_llegada?: ?string, observacion?: ?string}>  $registros

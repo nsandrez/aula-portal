@@ -95,6 +95,8 @@ return [
 
     'anio_escolar' => (int) env('ANIO_ESCOLAR', 2026),
 
+    'zona_horaria_escolar' => env('ZONA_HORARIA_ESCOLAR', 'America/Santiago'),
+
     /*
     |--------------------------------------------------------------------------
     | Encryption Key

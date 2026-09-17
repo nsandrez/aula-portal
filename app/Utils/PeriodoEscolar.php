@@ -18,10 +18,10 @@ final class PeriodoEscolar
     }
 
     /**
-     * Fecha de hoy en formato aaaa-mm-dd.
+     * Fecha de hoy en la zona horaria del colegio, en formato aaaa-mm-dd.
      */
     public static function fechaDeHoy(): string
     {
-        return now()->toDateString();
+        return now(config('app.zona_horaria_escolar', 'America/Santiago'))->toDateString();
     }
 }
