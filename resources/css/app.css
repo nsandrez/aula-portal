@@ -21,88 +21,88 @@
  */
 @layer base {
     html {
-        font-size: 17px;
+        font-size: 16px;
     }
 
     body {
-        @apply bg-white text-slate-800 antialiased;
+        @apply bg-[#f1f5f9] text-slate-800 antialiased;
     }
 
     :focus-visible {
-        @apply outline-3 outline-offset-2 outline-marca-600;
+        @apply outline-3 outline-offset-2 outline-blue-600;
     }
 }
 
 @layer components {
     .tarjeta {
-        @apply rounded-2xl border border-slate-200 bg-white p-6;
+        @apply rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs;
     }
 
     .titulo-pagina {
-        @apply text-2xl font-bold text-slate-900;
+        @apply text-2xl font-bold tracking-tight text-slate-900;
     }
 
     .titulo-seccion {
-        @apply text-lg font-semibold text-slate-900;
+        @apply text-lg font-bold text-slate-900;
     }
 
     .texto-ayuda {
-        @apply text-base text-slate-600;
+        @apply text-sm text-slate-600;
     }
 
     .boton-primario {
-        @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold whitespace-nowrap transition-colors bg-marca-600 text-white hover:bg-marca-700;
+        @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold whitespace-nowrap transition-all duration-150 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-xs hover:shadow-md hover:from-blue-700 hover:to-indigo-800 active:scale-[0.98];
     }
 
     .boton-secundario {
-        @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold whitespace-nowrap transition-colors border border-slate-300 bg-white text-slate-800 hover:bg-slate-50;
+        @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold whitespace-nowrap transition-all duration-150 border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 active:scale-[0.98];
     }
 
     .boton-peligro {
-        @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold whitespace-nowrap transition-colors border border-red-200 bg-white text-red-700 hover:bg-red-50;
+        @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold whitespace-nowrap transition-all duration-150 border border-rose-200 bg-white text-rose-700 shadow-2xs hover:bg-rose-50 hover:border-rose-300 active:scale-[0.98];
     }
 
     .etiqueta {
-        @apply mb-1.5 block text-base font-medium text-slate-800;
+        @apply mb-1.5 block text-sm font-semibold text-slate-800;
     }
 
     .campo {
-        @apply block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base text-slate-900 placeholder:text-slate-400 focus:border-marca-600 focus:outline-none;
+        @apply block min-h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900 shadow-2xs placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all;
     }
 
     .tabla {
-        @apply w-full text-left text-base;
+        @apply w-full text-left text-sm;
     }
 
     .tabla th {
-        @apply border-b border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600;
+        @apply border-b border-slate-200 bg-slate-50/80 px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-600;
     }
 
     .tabla td {
-        @apply border-b border-slate-100 px-4 py-3.5 align-middle;
+        @apply border-b border-slate-100 px-4 py-3.5 align-middle text-slate-800;
     }
 
     .insignia-verde {
-        @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-green-50 text-green-800;
+        @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/70;
     }
 
     .insignia-roja {
-        @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-red-50 text-red-800;
+        @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200/70;
     }
 
     .insignia-amarilla {
-        @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-amber-50 text-amber-800;
+        @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200/70;
     }
 
     .insignia-gris {
-        @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-slate-100 text-slate-700;
+        @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200;
     }
 
     .modal-fondo {
-        @apply fixed inset-0 z-50 items-center justify-center bg-slate-900/50 p-4;
+        @apply fixed inset-0 z-50 items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4;
     }
 
     .modal-caja {
-        @apply max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl;
+        @apply max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-7 shadow-2xl;
     }
 }

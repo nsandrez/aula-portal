@@ -62,10 +62,10 @@ class BusquedaApoderadosTest extends TestCase
                 ->assertOk()
                 ->assertJsonCount(1, 'apoderados')
                 ->assertJsonPath('apoderados.0.id', $this->apoderadaMarcela->id)
-                ->assertJsonPath('apoderados.0.nombre', 'Marcela Contreras Silva')
+                ->assertJsonPath('apoderados.0.nombre', 'MARCELA CONTRERAS SILVA')
                 ->assertJsonPath('apoderados.0.rut', '55555555-5')
                 ->assertJsonPath('apoderados.0.pupilos_count', 1)
-                ->assertJsonPath('apoderados.0.pupilos.0', 'Daniela Castillo');
+                ->assertJsonPath('apoderados.0.pupilos.0', 'DANIELA CASTILLO');
         }
     }
 
@@ -75,7 +75,7 @@ class BusquedaApoderadosTest extends TestCase
             ->getJson(route('matriculas.buscar_apoderados', ['busqueda' => 'Marcela Contreras']))
             ->assertOk()
             ->assertJsonCount(1, 'apoderados')
-            ->assertJsonPath('apoderados.0.nombre', 'Marcela Contreras Silva');
+            ->assertJsonPath('apoderados.0.nombre', 'MARCELA CONTRERAS SILVA');
     }
 
     public function test_busca_apoderado_por_nombre_y_segundo_apellido_dejando_el_primer_apellido_opcional(): void
@@ -85,14 +85,14 @@ class BusquedaApoderadosTest extends TestCase
             ->getJson(route('matriculas.buscar_apoderados', ['busqueda' => 'Marcela Silva']))
             ->assertOk()
             ->assertJsonCount(1, 'apoderados')
-            ->assertJsonPath('apoderados.0.nombre', 'Marcela Contreras Silva');
+            ->assertJsonPath('apoderados.0.nombre', 'MARCELA CONTRERAS SILVA');
 
         // Carlos Andrés Pérez Gómez se encuentra buscando "Carlos Gómez"
         $this->actingAs($this->administrador)
             ->getJson(route('matriculas.buscar_apoderados', ['busqueda' => 'Carlos Gómez']))
             ->assertOk()
             ->assertJsonCount(1, 'apoderados')
-            ->assertJsonPath('apoderados.0.nombre', 'Carlos Andrés Pérez Gómez');
+            ->assertJsonPath('apoderados.0.nombre', 'CARLOS ANDRES PEREZ GOMEZ');
     }
 
     public function test_busca_apoderado_por_apellidos_paterno_y_materno(): void
@@ -101,7 +101,7 @@ class BusquedaApoderadosTest extends TestCase
             ->getJson(route('matriculas.buscar_apoderados', ['busqueda' => 'Contreras Silva']))
             ->assertOk()
             ->assertJsonCount(1, 'apoderados')
-            ->assertJsonPath('apoderados.0.nombre', 'Marcela Contreras Silva');
+            ->assertJsonPath('apoderados.0.nombre', 'MARCELA CONTRERAS SILVA');
     }
 
     public function test_rechaza_busqueda_de_un_solo_nombre_sin_apellido(): void

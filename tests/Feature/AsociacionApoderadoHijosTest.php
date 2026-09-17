@@ -96,8 +96,8 @@ class AsociacionApoderadoHijosTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Mis Pupilos / Hijos a Cargo (2)');
-        $response->assertSee('Sofía Álvarez');
-        $response->assertSee('Matías Bustamante');
+        $response->assertSee('SOFIA ALVAREZ');
+        $response->assertSee('MATIAS BUSTAMANTE');
         $response->assertSee('2 Hijos');
     }
 
@@ -130,11 +130,11 @@ class AsociacionApoderadoHijosTest extends TestCase
         // Ver notas de hijo 2
         $respNotasHijo2 = $this->actingAs($apoderado)->get("/notas?pupilo_id={$hijo2->id}");
         $respNotasHijo2->assertOk();
-        $respNotasHijo2->assertSee('Calificaciones del Primer Semestre - Matías Bustamante');
+        $respNotasHijo2->assertSee('Calificaciones del Primer Semestre - MATIAS BUSTAMANTE');
 
         // Ver asistencias de hijo 1
         $respAsisHijo1 = $this->actingAs($apoderado)->get("/asistencias?pupilo_id={$hijo1->id}");
         $respAsisHijo1->assertOk();
-        $respAsisHijo1->assertSee('Historial Reciente Día a Día - Sofía Álvarez');
+        $respAsisHijo1->assertSee('Historial Reciente Día a Día - SOFIA ALVAREZ');
     }
 }

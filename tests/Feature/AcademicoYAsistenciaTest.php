@@ -121,7 +121,7 @@ class AcademicoYAsistenciaTest extends TestCase
         $response->assertSee('1° Medio A');
         $response->assertSee('Lengua y Literatura');
         $response->assertSee('LEN-101');
-        $response->assertSee('Prof. Rodrigo Sánchez');
+        $response->assertSee('PROF. RODRIGO SANCHEZ');
     }
 
     public function test_vista_asistencias_despliega_control_dia_a_dia(): void
@@ -157,7 +157,7 @@ class AcademicoYAsistenciaTest extends TestCase
         $response = $this->actingAs($docente)->get('/asistencias?curso_id='.$curso->id);
 
         $response->assertStatus(200);
-        $response->assertSee('Sofía Álvarez');
+        $response->assertSee('SOFIA ALVAREZ');
         $response->assertSee('Presente');
         $response->assertSee('Control de Asistencia del Día a Día');
     }

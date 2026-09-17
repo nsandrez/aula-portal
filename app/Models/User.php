@@ -10,6 +10,7 @@ use App\Utils\PeriodoEscolar;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -35,6 +36,36 @@ class User extends Authenticatable
             'password' => 'hashed',
             'rol' => RolUsuario::class,
         ];
+    }
+
+    /**
+     * Normaliza un nombre a mayúsculas y sin tildes/acentos ortográficos.
+     */
+    public static function normalizarNombre(string $nombre): string
+    {
+        $sinTildes = strtr($nombre, [
+            'á' => 'A', 'é' => 'E', 'í' => 'I', 'ó' => 'O', 'ú' => 'U',
+            'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U',
+            'ü' => 'U', 'Ü' => 'U',
+            'à' => 'A', 'è' => 'E', 'ì' => 'I', 'ò' => 'O', 'ù' => 'U',
+            'À' => 'A', 'È' => 'E', 'Ì' => 'I', 'Ò' => 'O', 'Ù' => 'U',
+            'ä' => 'A', 'ë' => 'E', 'ï' => 'I', 'ö' => 'O',
+            'Ä' => 'A', 'Ë' => 'E', 'Ï' => 'I', 'Ö' => 'O',
+            'â' => 'A', 'ê' => 'E', 'î' => 'I', 'ô' => 'O', 'û' => 'U',
+            'Â' => 'A', 'Ê' => 'E', 'Î' => 'I', 'Ô' => 'O', 'Û' => 'U',
+        ]);
+
+        return mb_strtoupper(trim((string) preg_replace('/\s+/', ' ', $sinTildes)));
+    }
+
+    /**
+     * Guarda el nombre siempre en mayúsculas y sin tildes.
+     */
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => $value !== null ? self::normalizarNombre($value) : null,
+        );
     }
 
     /**
