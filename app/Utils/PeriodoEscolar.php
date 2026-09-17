@@ -22,6 +22,22 @@ final class PeriodoEscolar
      */
     public static function fechaDeHoy(): string
     {
-        return now(config('app.zona_horaria_escolar', 'America/Santiago'))->toDateString();
+        return now(self::zonaHoraria())->toDateString();
+    }
+
+    /**
+     * Hora actual en la zona horaria del colegio, en formato HH:MM.
+     */
+    public static function horaActual(): string
+    {
+        return now(self::zonaHoraria())->format('H:i');
+    }
+
+    /**
+     * Zona horaria configurada para el colegio.
+     */
+    public static function zonaHoraria(): string
+    {
+        return (string) config('app.zona_horaria_escolar', 'America/Santiago');
     }
 }

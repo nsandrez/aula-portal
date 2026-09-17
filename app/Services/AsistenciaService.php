@@ -100,8 +100,8 @@ class AsistenciaService
                 ],
                 [
                     'estado' => $registro['estado'],
-                    'hora_llegada' => $registro['hora_llegada'] ?? null,
-                    'observacion' => $registro['observacion'] ?? null,
+                    'hora_llegada' => $registro['estado'] === 'atraso' ? ($registro['hora_llegada'] ?? null) : null,
+                    'observacion' => $registro['estado'] === 'justificado' ? ($registro['observacion'] ?? null) : null,
                     'registrado_por_id' => $registrador->id,
                 ]
             );

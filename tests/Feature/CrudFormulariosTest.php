@@ -125,6 +125,8 @@ class CrudFormulariosTest extends TestCase
 
     public function test_docente_puede_guardar_asistencia_diaria_desde_el_formulario(): void
     {
+        $this->travelTo(now()->parse('2026-09-16 15:00:00'));
+
         $docente = User::factory()->create(['rol' => RolUsuario::Docente]);
         $estudiante = User::factory()->create(['rol' => RolUsuario::Estudiante]);
         $curso = Curso::create([
@@ -135,7 +137,6 @@ class CrudFormulariosTest extends TestCase
 
         $response = $this->actingAs($docente)->post('/asistencias', [
             'curso_id' => $curso->id,
-            'fecha' => '2026-09-16',
             'asistencias' => [
                 [
                     'estudiante_id' => $estudiante->id,

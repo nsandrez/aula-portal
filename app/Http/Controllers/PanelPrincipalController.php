@@ -85,7 +85,7 @@ class PanelPrincipalController extends Controller
     public function mostrarAsistencias(Request $request): View
     {
         $usuario = $request->user();
-        $fecha = (string) $request->query('fecha', PeriodoEscolar::fechaDeHoy());
+        $fecha = PeriodoEscolar::fechaDeHoy();
 
         $cursos = $this->academicoService->obtenerCursosOrdenados();
         $cursoSeleccionado = $cursos->firstWhere('id', (int) $request->query('curso_id')) ?? $cursos->first();
@@ -116,6 +116,7 @@ class PanelPrincipalController extends Controller
             'cursos' => $cursos,
             'cursoSeleccionado' => $cursoSeleccionado,
             'fecha' => $fecha,
+            'horaActual' => PeriodoEscolar::horaActual(),
             'asistencias' => $this->asistenciaService->obtenerListaParaPaseDeLista($cursoId, $fecha),
             'asistenciaGuardada' => $this->asistenciaService->estaAsistenciaGuardada($cursoId, $fecha),
             'resumen' => $this->asistenciaService->calcularResumenCurso($cursoId, $fecha),

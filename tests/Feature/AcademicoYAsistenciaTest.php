@@ -126,6 +126,8 @@ class AcademicoYAsistenciaTest extends TestCase
 
     public function test_vista_asistencias_despliega_control_dia_a_dia(): void
     {
+        $this->travelTo(now()->parse('2026-09-15 15:00:00'));
+
         $docente = User::factory()->create(['rol' => RolUsuario::Docente]);
         $estudiante = User::factory()->create([
             'name' => 'Sofía Álvarez',
@@ -152,7 +154,7 @@ class AcademicoYAsistenciaTest extends TestCase
             $docente
         );
 
-        $response = $this->actingAs($docente)->get('/asistencias?curso_id='.$curso->id.'&fecha=2026-09-15');
+        $response = $this->actingAs($docente)->get('/asistencias?curso_id='.$curso->id);
 
         $response->assertStatus(200);
         $response->assertSee('Sofía Álvarez');
