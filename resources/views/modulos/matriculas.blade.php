@@ -194,48 +194,43 @@
             </form>
         </x-modal>
 
-        {{-- Asignar apoderado a uno o varios estudiantes --}}
+        {{-- Asignar apoderado: primero el apoderado, luego buscar a cada hijo por RUT o nombre --}}
         <x-modal id="modal-vincular-apoderado" titulo="Asignar apoderado">
-            <form action="{{ route('matriculas.asociar_apoderado') }}" method="POST" class="space-y-5">
+            <form action="{{ route('matriculas.asociar_apoderado') }}" method="POST" class="space-y-5"
+                  data-vincular-apoderado data-url-busqueda="{{ route('matriculas.buscar_estudiantes') }}">
                 @csrf
                 <div>
                     <label for="vincular-apoderado-id" class="etiqueta">1. Elige al apoderado</label>
-                    <select id="vincular-apoderado-id" name="apoderado_id" required class="campo">
+                    <select id="vincular-apoderado-id" name="apoderado_id" required class="campo" data-selector-apoderado>
                         <option value="">Elige un apoderado</option>
                         @foreach($apoderados as $apoderado)
-                            <option value="{{ $apoderado->id }}">{{ $apoderado->name }}</option>
+                            <option value="{{ $apoderado->id }}">{{ $apoderado->name }}{{ $apoderado->rut ? ' · '.\App\Utils\FormateadorRut::formatearRut($apoderado->rut) : '' }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                <fieldset>
-                    <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-                        <legend class="etiqueta mb-0">2. Marca a sus hijos o pupilos</legend>
-                        <div class="flex gap-3 text-base">
-                            <button type="button" data-marcar-alumnos="si" class="text-marca-700 underline">Marcar todos</button>
-                            <button type="button" data-marcar-alumnos="no" class="text-marca-700 underline">Quitar marcas</button>
+                <fieldset data-paso-busqueda disabled class="space-y-3 disabled:opacity-50">
+                    <legend class="etiqueta">2. Busca a su hijo o pupilo</legend>
+                    <div>
+                        <label for="vincular-busqueda" class="sr-only">RUT o nombre completo del estudiante</label>
+                        <div class="relative">
+                            <x-icono nombre="buscar" clase="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
+                            <input type="search" id="vincular-busqueda" data-campo-busqueda autocomplete="off"
+                                   placeholder="RUT (12345678-9) o nombre completo" class="campo pl-11">
                         </div>
+                        <p class="mt-1.5 text-sm text-slate-500" data-mensaje-busqueda aria-live="polite">Escribe al menos 3 caracteres.</p>
                     </div>
-                    <div class="max-h-72 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200">
-                        @forelse($matriculas as $matricula)
-                            <label class="flex cursor-pointer items-start gap-3 p-3 hover:bg-slate-50">
-                                <input type="checkbox" name="estudiante_ids[]" value="{{ $matricula->estudiante_id }}" class="casilla-alumno mt-1 size-5 accent-marca-600">
-                                <span>
-                                    <span class="block font-medium text-slate-900">{{ $matricula->estudiante?->name }}</span>
-                                    <span class="block text-sm text-slate-500">
-                                        {{ $matricula->curso?->nombre }} · Apoderado actual: {{ $matricula->apoderado?->name ?? 'ninguno' }}
-                                    </span>
-                                </span>
-                            </label>
-                        @empty
-                            <p class="p-3 texto-ayuda">No hay estudiantes matriculados.</p>
-                        @endforelse
-                    </div>
+                    <ul class="divide-y divide-slate-100 rounded-xl border border-slate-200 empty:hidden" data-resultados-busqueda></ul>
                 </fieldset>
+
+                <div data-paso-seleccion class="hidden space-y-2">
+                    <p class="etiqueta">3. Hijos que se vincularán</p>
+                    <ul class="space-y-2" data-lista-seleccionados></ul>
+                </div>
 
                 <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
                     <button type="button" data-cerrar-modal="modal-vincular-apoderado" class="boton-secundario">Cancelar</button>
-                    <button type="submit" class="boton-primario">Guardar</button>
+                    <button type="submit" class="boton-primario disabled:cursor-not-allowed disabled:opacity-50" data-boton-guardar-vinculo disabled>Guardar</button>
                 </div>
             </form>
         </x-modal>

@@ -6,10 +6,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ActualizarMatriculaRequest;
 use App\Http\Requests\AsociarApoderadoRequest;
+use App\Http\Requests\BuscarEstudiantesRequest;
 use App\Http\Requests\GuardarMatriculaRequest;
 use App\Models\Matricula;
 use App\Models\User;
 use App\Services\MatriculaService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
 class MatriculaController extends Controller
@@ -37,6 +39,16 @@ class MatriculaController extends Controller
         $matricula = $this->matriculaService->actualizarMatricula($matricula, $request->validated());
 
         return back()->with('exito', "La matrícula de {$matricula->estudiante->name} fue actualizada.");
+    }
+
+    /**
+     * Devuelve los estudiantes matriculados que coinciden con un RUT o nombre.
+     */
+    public function buscarEstudiantes(BuscarEstudiantesRequest $request): JsonResponse
+    {
+        return response()->json([
+            'estudiantes' => $this->matriculaService->buscarEstudiantesMatriculados((string) $request->validated('busqueda')),
+        ]);
     }
 
     /**
