@@ -51,15 +51,15 @@
     }
 
     .boton-primario {
-        @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold transition-colors bg-marca-600 text-white hover:bg-marca-700;
+        @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold whitespace-nowrap transition-colors bg-marca-600 text-white hover:bg-marca-700;
     }
 
     .boton-secundario {
-        @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold transition-colors border border-slate-300 bg-white text-slate-800 hover:bg-slate-50;
+        @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold whitespace-nowrap transition-colors border border-slate-300 bg-white text-slate-800 hover:bg-slate-50;
     }
 
     .boton-peligro {
-        @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold transition-colors border border-red-200 bg-white text-red-700 hover:bg-red-50;
+        @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold whitespace-nowrap transition-colors border border-red-200 bg-white text-red-700 hover:bg-red-50;
     }
 
     .etiqueta {
