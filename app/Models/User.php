@@ -6,6 +6,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\RolUsuario;
+use App\Utils\PeriodoEscolar;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -105,7 +106,7 @@ class User extends Authenticatable
      */
     public function matriculaActual(): HasOne
     {
-        return $this->hasOne(Matricula::class, 'estudiante_id')->where('anio', 2026);
+        return $this->hasOne(Matricula::class, 'estudiante_id')->where('anio', PeriodoEscolar::anioVigente());
     }
 
     /**

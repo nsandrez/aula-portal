@@ -5,56 +5,12 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\User;
+use App\Utils\FormateadorRut;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthService
 {
-    /**
-     * Limpia un RUT chileno eliminando puntos y guiones, y convirtiendo a mayúsculas.
-     */
-    public function limpiarRut(string $rut): string
-    {
-        return strtoupper(preg_replace('/[^0-9kK]/', '', $rut) ?? '');
-    }
-
-    /**
-     * Valida si un string corresponde a un RUT chileno válido mediante el algoritmo de Módulo 11.
-     */
-    public function esRutValido(string $rut): bool
-    {
-        $limpio = $this->limpiarRut($rut);
-
-        if (strlen($limpio) < 8 || strlen($limpio) > 9) {
-            return false;
-        }
-
-        $cuerpo = substr($limpio, 0, -1);
-        $dv = substr($limpio, -1);
-
-        if (! ctype_digit($cuerpo)) {
-            return false;
-        }
-
-        $suma = 0;
-        $multiplo = 2;
-
-        for ($i = strlen($cuerpo) - 1; $i >= 0; $i--) {
-            $suma += (int) $cuerpo[$i] * $multiplo;
-            $multiplo = $multiplo === 7 ? 2 : $multiplo + 1;
-        }
-
-        $resto = 11 - ($suma % 11);
-
-        $dvEsperado = match ($resto) {
-            11 => '0',
-            10 => 'K',
-            default => (string) $resto,
-        };
-
-        return strtoupper($dv) === $dvEsperado;
-    }
-
     /**
      * Determina si el identificador tiene formato de correo electrónico.
      */
@@ -77,7 +33,7 @@ class AuthService
             ], $recordar);
         }
 
-        $rutLimpio = $this->limpiarRut($limpio);
+        $rutLimpio = FormateadorRut::limpiarRut($limpio);
 
         if (! empty($rutLimpio)) {
             $usuario = User::query()
