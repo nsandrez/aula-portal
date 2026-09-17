@@ -13,19 +13,27 @@
 
 @section('contenido')
     @if($esPersonalEscolar)
-        {{-- Paso 1: elegir curso y día --}}
-        <form method="GET" action="{{ route('asistencias.index') }}" class="tarjeta grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        {{-- Día y hora actuales: solo se pasa asistencia de hoy --}}
+        <section class="tarjeta flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" aria-label="Fecha y hora actual">
+            <div>
+                <p class="texto-ayuda">Hoy es</p>
+                <p class="text-2xl font-bold text-slate-900">{{ ucfirst(FormateadorFecha::formatearFechaLarga($fecha)) }}</p>
+            </div>
+            <div class="sm:text-right">
+                <p class="texto-ayuda">Hora actual</p>
+                <p class="text-3xl font-bold tabular-nums text-marca-700" data-reloj data-zona-horaria="{{ \App\Utils\PeriodoEscolar::zonaHoraria() }}">{{ $horaActual }}</p>
+            </div>
+        </section>
+
+        {{-- Paso 1: elegir curso --}}
+        <form method="GET" action="{{ route('asistencias.index') }}" class="tarjeta grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
                 <label for="curso_id" class="etiqueta">1. Elige el curso</label>
-                <select id="curso_id" name="curso_id" class="campo">
+                <select id="curso_id" name="curso_id" class="campo" data-enviar-al-cambiar>
                     @foreach($cursos as $curso)
                         <option value="{{ $curso->id }}" @selected($cursoSeleccionado?->id === $curso->id)>{{ $curso->nombre }}</option>
                     @endforeach
                 </select>
-            </div>
-            <div>
-                <label for="fecha" class="etiqueta">2. Elige el día</label>
-                <input type="date" id="fecha" name="fecha" value="{{ $fecha }}" class="campo">
             </div>
             <button type="submit" class="boton-secundario">Ver lista</button>
         </form>
@@ -34,13 +42,9 @@
         <form id="form-guardar-asistencia" action="{{ route('asistencias.guardar') }}" method="POST" class="tarjeta space-y-5">
             @csrf
             <input type="hidden" name="curso_id" value="{{ $cursoSeleccionado?->id }}">
-            <input type="hidden" name="fecha" value="{{ $fecha }}">
 
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h2 class="titulo-seccion">3. Marca la asistencia de {{ $cursoSeleccionado?->nombre }}</h2>
-                    <p class="texto-ayuda">{{ ucfirst(FormateadorFecha::formatearFechaLarga($fecha)) }}</p>
-                </div>
+                <h2 class="titulo-seccion">2. Marca la asistencia de {{ $cursoSeleccionado?->nombre }}</h2>
                 @if($asistencias->isNotEmpty())
                     <button type="button" data-marcar-todos-presentes class="boton-secundario">Marcar a todos presentes</button>
                 @endif
@@ -48,22 +52,26 @@
 
             @if(! $asistenciaGuardada && $asistencias->isNotEmpty())
                 <p class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-base text-amber-900" role="status">
-                    La asistencia de este día todavía no se ha guardado. Todos aparecen como «Presente»:
+                    La asistencia de hoy todavía no se ha guardado. Todos aparecen como «Presente»:
                     cambia solo a quienes faltaron o llegaron tarde y presiona «Guardar asistencia».
+                </p>
+            @else
+                <p class="flex flex-wrap gap-2 text-base" aria-label="Resumen del día">
+                    <span class="insignia-verde">{{ $resumen['presentes'] }} presentes</span>
+                    <span class="insignia-amarilla">{{ $resumen['atrasos'] }} atrasos</span>
+                    <span class="insignia-gris">{{ $resumen['justificados'] }} justificados</span>
+                    <span class="insignia-roja">{{ $resumen['ausentes'] }} ausentes</span>
+                    <span class="insignia-gris">Asistencia {{ FormateadorFecha::formatearPorcentaje($resumen['porcentaje_asistencia']) }}</span>
                 </p>
             @endif
 
-            <p @class(['flex flex-wrap gap-2 text-base', 'hidden' => ! $asistenciaGuardada]) aria-label="Resumen del día">
-                <span class="insignia-verde">{{ $resumen['presentes'] }} presentes</span>
-                <span class="insignia-amarilla">{{ $resumen['atrasos'] }} atrasos</span>
-                <span class="insignia-gris">{{ $resumen['justificados'] }} justificados</span>
-                <span class="insignia-roja">{{ $resumen['ausentes'] }} ausentes</span>
-                <span class="insignia-gris">Asistencia {{ FormateadorFecha::formatearPorcentaje($resumen['porcentaje_asistencia']) }}</span>
-            </p>
-
             <ol class="divide-y divide-slate-100 border-y border-slate-100">
                 @forelse($asistencias as $indice => $registro)
-                    <li class="space-y-3 py-4">
+                    @php
+                        $estadoElegido = old("asistencias.$indice.estado", $registro->estado);
+                        $horaGuardada = $registro->hora_llegada ? substr($registro->hora_llegada, 0, 5) : '';
+                    @endphp
+                    <li class="space-y-3 py-4" data-fila-asistencia>
                         <input type="hidden" name="asistencias[{{ $indice }}][estudiante_id]" value="{{ $registro->estudiante_id }}">
 
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -76,7 +84,8 @@
                                 @foreach($opcionesEstado as $valor => $texto)
                                     <label class="cursor-pointer">
                                         <input type="radio" name="asistencias[{{ $indice }}][estado]" value="{{ $valor }}"
-                                               @checked($registro->estado === $valor)
+                                               @checked($estadoElegido === $valor)
+                                               data-estado-asistencia
                                                class="peer sr-only {{ $valor === 'presente' ? 'estado-presente' : '' }}">
                                         <span class="inline-flex min-h-11 items-center rounded-xl border border-slate-300 px-4 text-base text-slate-700 peer-checked:border-marca-600 peer-checked:bg-marca-600 peer-checked:text-white peer-focus-visible:outline-3 peer-focus-visible:outline-marca-600">
                                             {{ $texto }}
@@ -86,21 +95,22 @@
                             </fieldset>
                         </div>
 
-                        <details class="text-base">
-                            <summary class="cursor-pointer text-marca-700">Agregar hora de llegada o comentario</summary>
-                            <div class="mt-3 grid gap-3 sm:grid-cols-[12rem_1fr]">
-                                <div>
-                                    <label for="hora-{{ $indice }}" class="etiqueta">Hora de llegada</label>
-                                    <input type="time" id="hora-{{ $indice }}" name="asistencias[{{ $indice }}][hora_llegada]"
-                                           value="{{ $registro->hora_llegada ? substr($registro->hora_llegada, 0, 5) : '' }}" class="campo">
-                                </div>
-                                <div>
-                                    <label for="observacion-{{ $indice }}" class="etiqueta">Comentario</label>
-                                    <input type="text" id="observacion-{{ $indice }}" name="asistencias[{{ $indice }}][observacion]"
-                                           value="{{ $registro->observacion }}" placeholder="Ejemplo: llegó con certificado médico" class="campo">
-                                </div>
-                            </div>
-                        </details>
+                        {{-- Solo aparece al elegir «Atraso» --}}
+                        <div data-detalle-estado="atraso" @class(['max-w-xs', 'hidden' => $estadoElegido !== 'atraso'])>
+                            <label for="hora-{{ $indice }}" class="etiqueta">Hora de llegada</label>
+                            <input type="time" id="hora-{{ $indice }}" name="asistencias[{{ $indice }}][hora_llegada]"
+                                   value="{{ old("asistencias.$indice.hora_llegada", $horaGuardada) }}"
+                                   @disabled($estadoElegido !== 'atraso') required class="campo">
+                        </div>
+
+                        {{-- Solo aparece al elegir «Justificado» --}}
+                        <div data-detalle-estado="justificado" @class(['hidden' => $estadoElegido !== 'justificado'])>
+                            <label for="justificacion-{{ $indice }}" class="etiqueta">Motivo de la justificación</label>
+                            <input type="text" id="justificacion-{{ $indice }}" name="asistencias[{{ $indice }}][observacion]"
+                                   value="{{ old("asistencias.$indice.observacion", $registro->observacion) }}" maxlength="255"
+                                   placeholder="Ejemplo: presentó certificado médico"
+                                   @disabled($estadoElegido !== 'justificado') required class="campo">
+                        </div>
                     </li>
                 @empty
                     <li class="py-4 texto-ayuda">Este curso todavía no tiene estudiantes matriculados.</li>

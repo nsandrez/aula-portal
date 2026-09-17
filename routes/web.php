@@ -37,6 +37,8 @@ Route::middleware('auth')->group(function () {
 
     // CRUD Matrículas
     Route::post('/matriculas', [MatriculaController::class, 'guardar'])->name('matriculas.guardar');
+    Route::get('/matriculas/buscar-estudiantes', [MatriculaController::class, 'buscarEstudiantes'])->name('matriculas.buscar_estudiantes');
+    Route::get('/matriculas/buscar-apoderados', [MatriculaController::class, 'buscarApoderados'])->name('matriculas.buscar_apoderados');
     Route::post('/matriculas/asociar-apoderado', [MatriculaController::class, 'asociarApoderado'])->name('matriculas.asociar_apoderado');
     Route::put('/matriculas/{matricula}', [MatriculaController::class, 'actualizar'])->name('matriculas.actualizar');
 
