@@ -95,45 +95,35 @@ class BusquedaApoderadosTest extends TestCase
             ->assertJsonPath('apoderados.0.nombre', 'Carlos Andrés Pérez Gómez');
     }
 
-    public function test_busca_apoderado_por_solo_primer_o_segundo_apellido(): void
+    public function test_busca_apoderado_por_apellidos_paterno_y_materno(): void
     {
-        // Primer apellido
         $this->actingAs($this->administrador)
-            ->getJson(route('matriculas.buscar_apoderados', ['busqueda' => 'Contreras']))
-            ->assertOk()
-            ->assertJsonCount(1, 'apoderados')
-            ->assertJsonPath('apoderados.0.nombre', 'Marcela Contreras Silva');
-
-        // Segundo apellido
-        $this->actingAs($this->administrador)
-            ->getJson(route('matriculas.buscar_apoderados', ['busqueda' => 'Silva']))
+            ->getJson(route('matriculas.buscar_apoderados', ['busqueda' => 'Contreras Silva']))
             ->assertOk()
             ->assertJsonCount(1, 'apoderados')
             ->assertJsonPath('apoderados.0.nombre', 'Marcela Contreras Silva');
     }
 
-    public function test_busca_apoderado_por_solo_primer_nombre(): void
+    public function test_rechaza_busqueda_de_un_solo_nombre_sin_apellido(): void
     {
         $this->actingAs($this->administrador)
-            ->getJson(route('matriculas.buscar_apoderados', ['busqueda' => 'Carlos']))
-            ->assertOk()
-            ->assertJsonCount(1, 'apoderados')
-            ->assertJsonPath('apoderados.0.nombre', 'Carlos Andrés Pérez Gómez');
+            ->getJson(route('matriculas.buscar_apoderados', ['busqueda' => 'Carla']))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['busqueda' => 'Debes ingresar el nombre y al menos un apellido (ej. Carla Pérez), o un RUT completo.']);
     }
 
     public function test_exige_al_menos_dos_caracteres_para_buscar(): void
     {
         $this->actingAs($this->administrador)
             ->getJson(route('matriculas.buscar_apoderados', ['busqueda' => 'M']))
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['busqueda' => 'Escribe al menos 2 caracteres para buscar.']);
+            ->assertUnprocessable();
     }
 
     public function test_docentes_estudiantes_y_apoderados_no_pueden_buscar_apoderados(): void
     {
         foreach ([RolUsuario::Docente, RolUsuario::Apoderado, RolUsuario::Estudiante] as $rol) {
             $this->actingAs(User::factory()->create(['rol' => $rol]))
-                ->getJson(route('matriculas.buscar_apoderados', ['busqueda' => 'Marcela']))
+                ->getJson(route('matriculas.buscar_apoderados', ['busqueda' => 'Marcela Contreras']))
                 ->assertForbidden();
         }
     }

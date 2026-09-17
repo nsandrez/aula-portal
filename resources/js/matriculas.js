@@ -52,6 +52,38 @@ function crearElemento(etiqueta, clases = '', texto = '') {
 }
 
 /**
+ * Valida si el texto califica como RUT completo o como nombre con al menos un apellido.
+ * Previene búsquedas masivas no indexadas sobre miles de registros.
+ */
+function validarTerminoBusqueda(texto, ejemploNombre = 'Carla Pérez') {
+    const limpio = texto.trim();
+    if (!limpio) {
+        return { esValido: false, mensaje: 'Ingresa el nombre y al menos un apellido, o RUT completo.' };
+    }
+
+    const rutLimpio = limpio.replace(/[^0-9kK]/g, '');
+    const esRut = /^\d{7,9}[0-9kK]?$/.test(rutLimpio);
+    if (esRut) {
+        return { esValido: true, tipo: 'rut', limpio };
+    }
+
+    const palabras = limpio.split(/\s+/).filter((p) => p.length >= 2);
+    if (palabras.length >= 2) {
+        return { esValido: true, tipo: 'nombre', limpio };
+    }
+
+    if (/\d/.test(limpio)) {
+        return { esValido: false, mensaje: 'Escribe el RUT completo (ej. 12345678-9).' };
+    }
+
+    if (palabras.length === 1) {
+        return { esValido: false, mensaje: `Ingresa el nombre y al menos un apellido (ej. ${palabras[0]} Pérez).` };
+    }
+
+    return { esValido: false, mensaje: 'Ingresa el nombre y al menos un apellido, o RUT completo.' };
+}
+
+/**
  * Modal «Asignar apoderado»: 1) buscar/elegir apoderado por RUT o nombre, 2) buscar hijo por RUT o nombre, 3) revisar y guardar.
  */
 export function iniciarVinculoApoderado(formulario) {
@@ -297,16 +329,17 @@ export function iniciarVinculoApoderado(formulario) {
     if (campoBusquedaApoderado) {
         campoBusquedaApoderado.addEventListener('input', () => {
             clearTimeout(temporizadorApoderado);
-            const texto = campoBusquedaApoderado.value.trim();
+            const validacion = validarTerminoBusqueda(campoBusquedaApoderado.value, 'Marcela Contreras');
 
-            if (texto.length < 2) {
+            if (!validacion.esValido) {
                 ultimaBusquedaApoderado = '';
                 listaResultadosApoderado.replaceChildren();
-                mensajeBusquedaApoderado.textContent = 'Escribe al menos 2 caracteres.';
+                mensajeBusquedaApoderado.textContent = validacion.mensaje;
                 return;
             }
 
-            temporizadorApoderado = setTimeout(() => buscarApoderados(texto), 300);
+            mensajeBusquedaApoderado.textContent = 'Buscando apoderados…';
+            temporizadorApoderado = setTimeout(() => buscarApoderados(validacion.limpio), 300);
         });
 
         campoBusquedaApoderado.addEventListener('keydown', (evento) => {
@@ -334,16 +367,17 @@ export function iniciarVinculoApoderado(formulario) {
     // Eventos para buscador de estudiantes
     campoBusqueda.addEventListener('input', () => {
         clearTimeout(temporizadorEstudiante);
-        const texto = campoBusqueda.value.trim();
+        const validacion = validarTerminoBusqueda(campoBusqueda.value, 'Lucas Díaz');
 
-        if (texto.length < 3) {
+        if (!validacion.esValido) {
             ultimaBusquedaEstudiante = '';
             listaResultados.replaceChildren();
-            mensajeBusqueda.textContent = 'Escribe al menos 3 caracteres.';
+            mensajeBusqueda.textContent = validacion.mensaje;
             return;
         }
 
-        temporizadorEstudiante = setTimeout(() => buscarEstudiantes(texto), 300);
+        mensajeBusqueda.textContent = 'Buscando estudiantes…';
+        temporizadorEstudiante = setTimeout(() => buscarEstudiantes(validacion.limpio), 300);
     });
 
     // Enter en el buscador de estudiante no debe enviar el formulario

@@ -50,25 +50,32 @@ class BusquedaEstudiantesTest extends TestCase
     public function test_busca_por_nombre_solo_en_matriculas_del_anio_vigente(): void
     {
         $this->actingAs($this->administrador)
-            ->getJson(route('matriculas.buscar_estudiantes', ['busqueda' => 'Lucas']))
+            ->getJson(route('matriculas.buscar_estudiantes', ['busqueda' => 'Lucas Díaz']))
             ->assertOk()
             ->assertJsonCount(1, 'estudiantes')
             ->assertJsonPath('estudiantes.0.nombre', 'Lucas Díaz Herrera');
+    }
+
+    public function test_rechaza_busqueda_de_un_solo_nombre_sin_apellido(): void
+    {
+        $this->actingAs($this->administrador)
+            ->getJson(route('matriculas.buscar_estudiantes', ['busqueda' => 'Lucas']))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['busqueda' => 'Debes ingresar el nombre y al menos un apellido (ej. Carla Pérez), o un RUT completo.']);
     }
 
     public function test_exige_al_menos_tres_caracteres(): void
     {
         $this->actingAs($this->administrador)
             ->getJson(route('matriculas.buscar_estudiantes', ['busqueda' => 'Lu']))
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['busqueda' => 'Escribe al menos 3 caracteres para buscar.']);
+            ->assertUnprocessable();
     }
 
     public function test_docentes_y_apoderados_no_pueden_buscar_estudiantes(): void
     {
         foreach ([RolUsuario::Docente, RolUsuario::Apoderado, RolUsuario::Estudiante] as $rol) {
             $this->actingAs(User::factory()->create(['rol' => $rol]))
-                ->getJson(route('matriculas.buscar_estudiantes', ['busqueda' => 'Lucas']))
+                ->getJson(route('matriculas.buscar_estudiantes', ['busqueda' => 'Lucas Díaz']))
                 ->assertForbidden();
         }
     }

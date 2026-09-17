@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Enums\RolUsuario;
+use App\Rules\BusquedaPersonaValida;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -26,7 +27,7 @@ class BuscarEstudiantesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'busqueda' => ['required', 'string', 'min:3', 'max:100'],
+            'busqueda' => ['required', 'string', 'min:3', 'max:100', new BusquedaPersonaValida],
         ];
     }
 

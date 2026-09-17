@@ -40,15 +40,6 @@ export function iniciarModales() {
         });
     });
 
-    // Cerrar al hacer clic en el telón de fondo (backdrop)
-    document.querySelectorAll('.modal-fondo').forEach((modal) => {
-        modal.addEventListener('click', (evento) => {
-            if (evento.target === modal) {
-                cerrarModal(modal.id);
-            }
-        });
-    });
-
     // Cerrar con la tecla Escape
     document.addEventListener('keydown', (evento) => {
         if (evento.key === 'Escape') {

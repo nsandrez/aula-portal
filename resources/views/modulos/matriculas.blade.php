@@ -207,9 +207,9 @@
                         <div class="relative">
                             <x-icono nombre="buscar" clase="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
                             <input type="search" id="vincular-apoderado-busqueda" data-campo-busqueda-apoderado autocomplete="off"
-                                   placeholder="RUT (12345678-9) o nombre completo" class="campo pl-11">
+                                   placeholder="RUT (ej. 12345678-9) o Nombre y Apellido" class="campo pl-11">
                         </div>
-                        <p class="mt-1.5 text-sm text-slate-500" data-mensaje-busqueda-apoderado aria-live="polite">Escribe al menos 2 caracteres.</p>
+                        <p class="mt-1.5 text-sm text-slate-500" data-mensaje-busqueda-apoderado aria-live="polite">Ingresa el nombre y al menos un apellido, o RUT completo.</p>
                         <ul class="divide-y divide-slate-100 rounded-xl border border-slate-200 empty:hidden max-h-52 overflow-y-auto" data-resultados-busqueda-apoderado></ul>
                     </div>
 
@@ -233,9 +233,9 @@
                         <div class="relative">
                             <x-icono nombre="buscar" clase="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
                             <input type="search" id="vincular-busqueda" data-campo-busqueda autocomplete="off"
-                                   placeholder="RUT (12345678-9) o nombre completo" class="campo pl-11">
+                                   placeholder="RUT (ej. 12345678-9) o Nombre y Apellido" class="campo pl-11">
                         </div>
-                        <p class="mt-1.5 text-sm text-slate-500" data-mensaje-busqueda aria-live="polite">Escribe al menos 3 caracteres.</p>
+                        <p class="mt-1.5 text-sm text-slate-500" data-mensaje-busqueda aria-live="polite">Ingresa el nombre y al menos un apellido, o RUT completo.</p>
                     </div>
                     <ul class="divide-y divide-slate-100 rounded-xl border border-slate-200 empty:hidden" data-resultados-busqueda></ul>
                 </fieldset>
