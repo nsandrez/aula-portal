@@ -148,11 +148,12 @@ export function iniciarLogin() {
         if (contenedorErrorCliente && mensajeErrorCliente) {
             mensajeErrorCliente.textContent = mensaje;
             contenedorErrorCliente.classList.remove('hidden');
+            contenedorErrorCliente.classList.add('flex');
         }
 
         if (campoEnfoque) {
             campoEnfoque.focus();
-            campoEnfoque.classList.add('border-amber-500', 'ring-1', 'ring-amber-500/40');
+            campoEnfoque.classList.add('border-red-500', 'ring-2', 'ring-red-200');
         }
     }
 
@@ -160,12 +161,13 @@ export function iniciarLogin() {
     function limpiarErrores() {
         if (contenedorErrorCliente) {
             contenedorErrorCliente.classList.add('hidden');
+            contenedorErrorCliente.classList.remove('flex');
         }
         if (campoIdentificador) {
-            campoIdentificador.classList.remove('border-amber-500', 'ring-1', 'ring-amber-500/40');
+            campoIdentificador.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
         }
         if (campoContrasena) {
-            campoContrasena.classList.remove('border-amber-500', 'ring-1', 'ring-amber-500/40');
+            campoContrasena.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
         }
     }
 

@@ -6,4 +6,103 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Color institucional único: azul sobrio y legible */
+    --color-marca-50: #eff6ff;
+    --color-marca-100: #dbeafe;
+    --color-marca-600: #1d4ed8;
+    --color-marca-700: #1e40af;
+    --color-marca-800: #1e3a8a;
+}
+
+/*
+ * Estilos base pensados para personas que usan poco el computador:
+ * texto grande, alto contraste y foco siempre visible.
+ */
+@layer base {
+    html {
+        font-size: 17px;
+    }
+
+    body {
+        @apply bg-white text-slate-800 antialiased;
+    }
+
+    :focus-visible {
+        @apply outline-3 outline-offset-2 outline-marca-600;
+    }
+}
+
+@layer components {
+    .tarjeta {
+        @apply rounded-2xl border border-slate-200 bg-white p-6;
+    }
+
+    .titulo-pagina {
+        @apply text-2xl font-bold text-slate-900;
+    }
+
+    .titulo-seccion {
+        @apply text-lg font-semibold text-slate-900;
+    }
+
+    .texto-ayuda {
+        @apply text-base text-slate-600;
+    }
+
+    .boton-primario {
+        @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold transition-colors bg-marca-600 text-white hover:bg-marca-700;
+    }
+
+    .boton-secundario {
+        @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold transition-colors border border-slate-300 bg-white text-slate-800 hover:bg-slate-50;
+    }
+
+    .boton-peligro {
+        @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold transition-colors border border-red-200 bg-white text-red-700 hover:bg-red-50;
+    }
+
+    .etiqueta {
+        @apply mb-1.5 block text-base font-medium text-slate-800;
+    }
+
+    .campo {
+        @apply block min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base text-slate-900 placeholder:text-slate-400 focus:border-marca-600 focus:outline-none;
+    }
+
+    .tabla {
+        @apply w-full text-left text-base;
+    }
+
+    .tabla th {
+        @apply border-b border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600;
+    }
+
+    .tabla td {
+        @apply border-b border-slate-100 px-4 py-3.5 align-middle;
+    }
+
+    .insignia-verde {
+        @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-green-50 text-green-800;
+    }
+
+    .insignia-roja {
+        @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-red-50 text-red-800;
+    }
+
+    .insignia-amarilla {
+        @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-amber-50 text-amber-800;
+    }
+
+    .insignia-gris {
+        @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-slate-100 text-slate-700;
+    }
+
+    .modal-fondo {
+        @apply fixed inset-0 z-50 items-center justify-center bg-slate-900/50 p-4;
+    }
+
+    .modal-caja {
+        @apply max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl;
+    }
 }

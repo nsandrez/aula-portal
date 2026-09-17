@@ -105,9 +105,53 @@ export function iniciarModales() {
     });
 }
 
+/**
+ * Ajusta el destino del formulario "Agregar asignatura" según el curso elegido.
+ */
+export function actualizarCursoAsociado(cursoId) {
+    const formulario = document.getElementById('form-asociar-asignatura');
+    const selectorCurso = document.getElementById('asociar-curso');
+
+    if (!formulario || !selectorCurso) {
+        return;
+    }
+
+    selectorCurso.value = cursoId || '';
+    const opcionElegida = selectorCurso.selectedOptions[0];
+    formulario.action = opcionElegida?.dataset.accion ?? '';
+}
+
+export function iniciarAsociacionAsignaturas() {
+    const selectorCurso = document.getElementById('asociar-curso');
+
+    if (selectorCurso) {
+        selectorCurso.addEventListener('change', () => actualizarCursoAsociado(selectorCurso.value));
+    }
+
+    document.querySelectorAll('[data-asociar-en-curso]').forEach((boton) => {
+        boton.addEventListener('click', () => {
+            actualizarCursoAsociado(boton.dataset.asociarEnCurso);
+            abrirModal('modal-asociar-asignatura');
+        });
+    });
+
+    // Pide confirmación antes de enviar formularios delicados (ej. quitar asignatura)
+    document.querySelectorAll('form[data-confirmar]').forEach((formulario) => {
+        formulario.addEventListener('submit', (evento) => {
+            if (!window.confirm(formulario.dataset.confirmar)) {
+                evento.preventDefault();
+            }
+        });
+    });
+}
+
 // Iniciar al cargar el DOM
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', iniciarModales);
+    document.addEventListener('DOMContentLoaded', () => {
+        iniciarModales();
+        iniciarAsociacionAsignaturas();
+    });
 } else {
     iniciarModales();
+    iniciarAsociacionAsignaturas();
 }
