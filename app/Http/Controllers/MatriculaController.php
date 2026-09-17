@@ -4,97 +4,49 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\RolUsuario;
+use App\Http\Requests\ActualizarMatriculaRequest;
+use App\Http\Requests\AsociarApoderadoRequest;
 use App\Http\Requests\GuardarMatriculaRequest;
 use App\Models\Matricula;
 use App\Models\User;
+use App\Services\MatriculaService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class MatriculaController extends Controller
 {
+    public function __construct(private MatriculaService $matriculaService) {}
+
     /**
      * Registra la matrícula de un estudiante en un curso (existente o nuevo).
      */
     public function guardar(GuardarMatriculaRequest $request): RedirectResponse
     {
-        $estudianteId = $request->input('estudiante_id');
-
-        // Si se seleccionó registrar un nuevo alumno
-        if ($request->input('tipo_registro') === 'nuevo') {
-            $nuevoEstudiante = User::create([
-                'name' => (string) $request->input('nombre_estudiante'),
-                'email' => (string) $request->input('email_estudiante'),
-                'rut' => $request->input('rut_estudiante') ? (string) $request->input('rut_estudiante') : null,
-                'rol' => RolUsuario::Estudiante,
-                'password' => Hash::make(
-                    (string) ($request->input('password_estudiante') ?: 'estudiante2026')
-                ),
-            ]);
-
-            $estudianteId = $nuevoEstudiante->id;
-        }
-
-        $matricula = Matricula::create([
-            'estudiante_id' => $estudianteId,
-            'curso_id' => (int) $request->input('curso_id'),
-            'apoderado_id' => $request->input('apoderado_id') ? (int) $request->input('apoderado_id') : null,
-            'numero_lista' => (int) $request->input('numero_lista'),
-            'anio' => (int) $request->input('anio'),
-            'estado' => 'regular',
-        ]);
+        $matricula = $this->matriculaService->registrarMatricula($request->validated());
 
         return back()->with(
             'exito',
-            "El estudiante {$matricula->estudiante->name} ha sido matriculado exitosamente en {$matricula->curso->nombre} (N° lista: {$matricula->numero_lista})."
+            "{$matricula->estudiante->name} quedó matriculado(a) en {$matricula->curso->nombre} con el número de lista {$matricula->numero_lista}."
         );
     }
 
     /**
      * Actualiza la matrícula de un estudiante (Exclusivo SuperUsuario).
      */
-    public function actualizar(Request $request, Matricula $matricula): RedirectResponse
+    public function actualizar(ActualizarMatriculaRequest $request, Matricula $matricula): RedirectResponse
     {
-        if (! auth()->user()?->esSuperUsuario()) {
-            abort(403, 'Acción reservada para SuperUsuario.');
-        }
+        $matricula = $this->matriculaService->actualizarMatricula($matricula, $request->validated());
 
-        $datosValidados = $request->validate([
-            'numero_lista' => ['required', 'integer', 'min:1', 'max:60'],
-            'estado' => ['required', 'in:regular,retirado'],
-            'apoderado_id' => ['nullable', 'exists:users,id'],
-        ]);
-
-        $matricula->update($datosValidados);
-
-        return back()->with('exito', "La matrícula de {$matricula->estudiante->name} ha sido actualizada.");
+        return back()->with('exito', "La matrícula de {$matricula->estudiante->name} fue actualizada.");
     }
 
     /**
      * Asocia uno o múltiples estudiantes (pupilos) a un apoderado.
      */
-    public function asociarApoderado(Request $request): RedirectResponse
+    public function asociarApoderado(AsociarApoderadoRequest $request): RedirectResponse
     {
-        $datosValidados = $request->validate([
-            'apoderado_id' => ['required', 'exists:users,id'],
-            'estudiante_ids' => ['required', 'array', 'min:1'],
-            'estudiante_ids.*' => ['exists:users,id'],
-        ]);
+        $apoderado = User::findOrFail((int) $request->validated('apoderado_id'));
+        $cantidad = $this->matriculaService->asociarApoderadoAPupilos($apoderado, $request->validated('estudiante_ids'));
 
-        $apoderado = User::findOrFail($datosValidados['apoderado_id']);
-
-        Matricula::whereIn('estudiante_id', $datosValidados['estudiante_ids'])
-            ->where('anio', 2026)
-            ->update([
-                'apoderado_id' => $apoderado->id,
-            ]);
-
-        $cantidad = count($datosValidados['estudiante_ids']);
-
-        return back()->with(
-            'exito',
-            "Se han vinculado exitosamente {$cantidad} pupilo(s) al apoderado(a) {$apoderado->name}."
-        );
+        return back()->with('exito', "Se vincularon {$cantidad} estudiante(s) a {$apoderado->name}.");
     }
 }

@@ -7,23 +7,23 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ActualizarCursoRequest;
 use App\Http\Requests\AsociarAsignaturaRequest;
 use App\Http\Requests\GuardarCursoRequest;
-use App\Models\Asignatura;
 use App\Models\Curso;
 use App\Models\CursoAsignatura;
-use App\Models\User;
 use App\Services\AcademicoService;
 use Illuminate\Http\RedirectResponse;
 
 class CursoController extends Controller
 {
+    public function __construct(private AcademicoService $academicoService) {}
+
     /**
      * Guarda un nuevo curso escolar.
      */
     public function guardar(GuardarCursoRequest $request): RedirectResponse
     {
-        $curso = Curso::create($request->validated());
+        $curso = $this->academicoService->crearCurso($request->validated());
 
-        return back()->with('exito', "El curso {$curso->nombre} ha sido creado exitosamente.");
+        return back()->with('exito', "Se creó el curso {$curso->nombre}.");
     }
 
     /**
@@ -31,27 +31,19 @@ class CursoController extends Controller
      */
     public function actualizar(ActualizarCursoRequest $request, Curso $curso): RedirectResponse
     {
-        $curso->update($request->validated());
+        $curso = $this->academicoService->actualizarCurso($curso, $request->validated());
 
-        return back()->with('exito', "El curso {$curso->nombre} ha sido actualizado correctamente.");
+        return back()->with('exito', "El curso {$curso->nombre} fue actualizado.");
     }
 
     /**
      * Asocia una asignatura a un curso escolar con su docente y carga horaria.
      */
-    public function asociarAsignatura(
-        AsociarAsignaturaRequest $request,
-        Curso $curso,
-        AcademicoService $academicoService
-    ): RedirectResponse {
-        $asignatura = Asignatura::findOrFail((int) $request->input('asignatura_id'));
-        $docenteId = $request->input('docente_id');
-        $docente = $docenteId ? User::find((int) $docenteId) : null;
-        $horas = (int) $request->input('horas_semanales', 4);
+    public function asociarAsignatura(AsociarAsignaturaRequest $request, Curso $curso): RedirectResponse
+    {
+        $cursoAsignatura = $this->academicoService->asociarAsignaturaDesdeFormulario($curso, $request->validated());
 
-        $academicoService->asociarAsignaturaACurso($curso, $asignatura, $docente, $horas);
-
-        return back()->with('exito', "La asignatura {$asignatura->nombre} ha sido asociada a {$curso->nombre}.");
+        return back()->with('exito', "Se agregó {$cursoAsignatura->asignatura->nombre} a {$curso->nombre}.");
     }
 
     /**
@@ -59,13 +51,10 @@ class CursoController extends Controller
      */
     public function desasociarAsignatura(Curso $curso, CursoAsignatura $cursoAsignatura): RedirectResponse
     {
-        if (! auth()->user()?->esSuperUsuario()) {
-            abort(403, 'Acción reservada para SuperUsuario.');
-        }
+        abort_unless(auth()->user()?->esSuperUsuario(), 403, 'Acción reservada para SuperUsuario.');
 
-        $nombreAsignatura = $cursoAsignatura->asignatura->nombre ?? 'Asignatura';
-        $cursoAsignatura->delete();
+        $nombreAsignatura = $this->academicoService->desasociarAsignatura($cursoAsignatura);
 
-        return back()->with('exito', "Se ha desvinculado {$nombreAsignatura} del curso {$curso->nombre}.");
+        return back()->with('exito', "Se quitó {$nombreAsignatura} del curso {$curso->nombre}.");
     }
 }
