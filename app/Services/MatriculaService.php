@@ -97,12 +97,17 @@ class MatriculaService
     {
         $texto = trim($busqueda);
         $rutLimpio = FormateadorRut::limpiarRut($texto);
-        $buscaPorRut = preg_match('/\d{3,}/', $rutLimpio) === 1;
+        $buscaPorRut = preg_match('/^\d{7,9}[0-9kK]?$/', $rutLimpio) === 1;
 
         $palabras = array_values(array_filter(
             preg_split('/\s+/', $texto) ?: [],
             fn (string $p): bool => mb_strlen($p) >= 2
         ));
+
+        // Para evitar búsquedas masivas no indexadas, se exige RUT completo o nombre + apellido
+        if (! $buscaPorRut && count($palabras) < 2) {
+            return [];
+        }
 
         return Matricula::query()
             ->with(['estudiante', 'curso', 'apoderado'])
