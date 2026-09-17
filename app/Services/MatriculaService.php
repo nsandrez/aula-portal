@@ -99,12 +99,25 @@ class MatriculaService
         $rutLimpio = FormateadorRut::limpiarRut($texto);
         $buscaPorRut = preg_match('/\d{3,}/', $rutLimpio) === 1;
 
+        $palabras = array_values(array_filter(
+            preg_split('/\s+/', $texto) ?: [],
+            fn (string $p): bool => mb_strlen($p) >= 2
+        ));
+
         return Matricula::query()
             ->with(['estudiante', 'curso', 'apoderado'])
             ->delAnioVigente()
-            ->whereHas('estudiante', function (Builder $consulta) use ($texto, $rutLimpio, $buscaPorRut): void {
-                $consulta->where(function (Builder $condicion) use ($texto, $rutLimpio, $buscaPorRut): void {
-                    $condicion->where('name', 'like', '%'.$texto.'%');
+            ->whereHas('estudiante', function (Builder $consulta) use ($texto, $palabras, $rutLimpio, $buscaPorRut): void {
+                $consulta->where(function (Builder $condicion) use ($texto, $palabras, $rutLimpio, $buscaPorRut): void {
+                    $condicion->where(function (Builder $sub) use ($palabras, $texto): void {
+                        if (! empty($palabras)) {
+                            foreach ($palabras as $palabra) {
+                                $sub->where('name', 'like', '%'.$palabra.'%');
+                            }
+                        } else {
+                            $sub->where('name', 'like', '%'.$texto.'%');
+                        }
+                    });
 
                     if ($buscaPorRut) {
                         $condicion->orWhereRaw(

@@ -52,7 +52,7 @@ function crearElemento(etiqueta, clases = '', texto = '') {
 }
 
 /**
- * Modal «Asignar apoderado»: 1) elegir apoderado, 2) buscar hijo por RUT o nombre, 3) revisar y guardar.
+ * Modal «Asignar apoderado»: 1) buscar/elegir apoderado por RUT o nombre, 2) buscar hijo por RUT o nombre, 3) revisar y guardar.
  */
 export function iniciarVinculoApoderado(formulario) {
     const selectorApoderado = formulario.querySelector('[data-selector-apoderado]');
@@ -63,9 +63,22 @@ export function iniciarVinculoApoderado(formulario) {
     const pasoSeleccion = formulario.querySelector('[data-paso-seleccion]');
     const listaSeleccionados = formulario.querySelector('[data-lista-seleccionados]');
     const botonGuardar = formulario.querySelector('[data-boton-guardar-vinculo]');
+
+    // Elementos del buscador de apoderado
+    const campoBusquedaApoderado = formulario.querySelector('[data-campo-busqueda-apoderado]');
+    const mensajeBusquedaApoderado = formulario.querySelector('[data-mensaje-busqueda-apoderado]');
+    const listaResultadosApoderado = formulario.querySelector('[data-resultados-busqueda-apoderado]');
+    const bloqueBusquedaApoderado = formulario.querySelector('[data-bloque-busqueda-apoderado]');
+    const tarjetaApoderadoSeleccionado = formulario.querySelector('[data-apoderado-seleccionado]');
+    const apoderadoNombre = formulario.querySelector('[data-apoderado-nombre]');
+    const apoderadoDetalle = formulario.querySelector('[data-apoderado-detalle]');
+    const botonCambiarApoderado = formulario.querySelector('[data-boton-cambiar-apoderado]');
+
     const seleccionados = new Map();
-    let temporizador = null;
-    let ultimaBusqueda = '';
+    let temporizadorEstudiante = null;
+    let ultimaBusquedaEstudiante = '';
+    let temporizadorApoderado = null;
+    let ultimaBusquedaApoderado = '';
 
     const actualizarSeleccion = () => {
         listaSeleccionados.replaceChildren();
@@ -98,7 +111,119 @@ export function iniciarVinculoApoderado(formulario) {
         botonGuardar.disabled = !selectorApoderado.value || seleccionados.size === 0;
     };
 
-    const mostrarResultados = (estudiantes) => {
+    // Lógica de elección y cambio de apoderado
+    const elegirApoderado = (apoderado) => {
+        selectorApoderado.value = apoderado.id;
+        if (apoderadoNombre) {
+            apoderadoNombre.textContent = apoderado.nombre;
+        }
+        if (apoderadoDetalle) {
+            const infoRUT = apoderado.rut || 'Sin RUT';
+            const infoEmail = apoderado.email ? ` · ${apoderado.email}` : '';
+            const infoPupilos = apoderado.pupilos_count > 0
+                ? ` · ${apoderado.pupilos_count} pupilo(s) vinculado(s)`
+                : ' · Sin pupilos actuales';
+            apoderadoDetalle.textContent = `${infoRUT}${infoEmail}${infoPupilos}`;
+        }
+        if (bloqueBusquedaApoderado) {
+            bloqueBusquedaApoderado.classList.add('hidden');
+        }
+        if (tarjetaApoderadoSeleccionado) {
+            tarjetaApoderadoSeleccionado.classList.remove('hidden');
+        }
+        if (listaResultadosApoderado) {
+            listaResultadosApoderado.replaceChildren();
+        }
+
+        pasoBusqueda.disabled = false;
+        campoBusqueda.focus();
+        actualizarSeleccion();
+    };
+
+    const deseleccionarApoderado = () => {
+        selectorApoderado.value = '';
+        if (tarjetaApoderadoSeleccionado) {
+            tarjetaApoderadoSeleccionado.classList.add('hidden');
+        }
+        if (bloqueBusquedaApoderado) {
+            bloqueBusquedaApoderado.classList.remove('hidden');
+        }
+        if (campoBusquedaApoderado) {
+            campoBusquedaApoderado.value = '';
+            campoBusquedaApoderado.focus();
+        }
+        if (mensajeBusquedaApoderado) {
+            mensajeBusquedaApoderado.textContent = 'Escribe al menos 2 caracteres.';
+        }
+        if (listaResultadosApoderado) {
+            listaResultadosApoderado.replaceChildren();
+        }
+
+        pasoBusqueda.disabled = true;
+        actualizarSeleccion();
+    };
+
+    const mostrarResultadosApoderado = (apoderados) => {
+        listaResultadosApoderado.replaceChildren();
+
+        if (apoderados.length === 0) {
+            mensajeBusquedaApoderado.textContent = 'No encontramos apoderados con ese RUT o nombre.';
+            return;
+        }
+
+        mensajeBusquedaApoderado.textContent = `${apoderados.length} resultado(s). Presiona «Elegir» en el apoderado correcto.`;
+
+        apoderados.forEach((apoderado) => {
+            const item = crearElemento('li', 'flex items-center justify-between gap-3 p-3 hover:bg-slate-50');
+            const datos = crearElemento('span');
+            const infoRUT = apoderado.rut || 'Sin RUT';
+            const infoPupilos = apoderado.pupilos_count > 0
+                ? `${apoderado.pupilos_count} pupilo(s)`
+                : 'Sin pupilos';
+            datos.append(
+                crearElemento('span', 'block font-medium text-slate-900', apoderado.nombre),
+                crearElemento('span', 'block text-sm text-slate-500', `${infoRUT} · ${apoderado.email} · ${infoPupilos}`),
+            );
+
+            const botonElegir = crearElemento('button', 'boton-primario min-h-10 px-3 text-sm shrink-0', 'Elegir');
+            botonElegir.type = 'button';
+            botonElegir.addEventListener('click', () => elegirApoderado(apoderado));
+
+            item.append(datos, botonElegir);
+            listaResultadosApoderado.append(item);
+        });
+    };
+
+    const buscarApoderados = async (texto) => {
+        ultimaBusquedaApoderado = texto;
+        mensajeBusquedaApoderado.textContent = 'Buscando apoderados…';
+
+        try {
+            const url = new URL(formulario.dataset.urlBusquedaApoderados, window.location.origin);
+            url.searchParams.set('busqueda', texto);
+            const respuesta = await fetch(url, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            const datos = await respuesta.json();
+
+            if (texto !== ultimaBusquedaApoderado) {
+                return;
+            }
+
+            if (!respuesta.ok) {
+                listaResultadosApoderado.replaceChildren();
+                mensajeBusquedaApoderado.textContent = datos.message || 'No se pudo buscar. Intenta nuevamente.';
+                return;
+            }
+
+            mostrarResultadosApoderado(datos.apoderados || []);
+        } catch {
+            mensajeBusquedaApoderado.textContent = 'No se pudo buscar. Revisa tu conexión e intenta nuevamente.';
+        }
+    };
+
+    const mostrarResultadosEstudiantes = (estudiantes) => {
         listaResultados.replaceChildren();
 
         if (estudiantes.length === 0) {
@@ -139,8 +264,8 @@ export function iniciarVinculoApoderado(formulario) {
         });
     };
 
-    const buscar = async (texto) => {
-        ultimaBusqueda = texto;
+    const buscarEstudiantes = async (texto) => {
+        ultimaBusquedaEstudiante = texto;
         mensajeBusqueda.textContent = 'Buscando…';
 
         try {
@@ -152,7 +277,7 @@ export function iniciarVinculoApoderado(formulario) {
             });
             const datos = await respuesta.json();
 
-            if (texto !== ultimaBusqueda) {
+            if (texto !== ultimaBusquedaEstudiante) {
                 return;
             }
 
@@ -162,35 +287,66 @@ export function iniciarVinculoApoderado(formulario) {
                 return;
             }
 
-            mostrarResultados(datos.estudiantes || []);
+            mostrarResultadosEstudiantes(datos.estudiantes || []);
         } catch {
             mensajeBusqueda.textContent = 'No se pudo buscar. Revisa tu conexión e intenta nuevamente.';
         }
     };
 
-    selectorApoderado.addEventListener('change', () => {
-        pasoBusqueda.disabled = !selectorApoderado.value;
-        if (selectorApoderado.value) {
-            campoBusqueda.focus();
-        }
-        actualizarSeleccion();
-    });
+    // Eventos para buscador de apoderados
+    if (campoBusquedaApoderado) {
+        campoBusquedaApoderado.addEventListener('input', () => {
+            clearTimeout(temporizadorApoderado);
+            const texto = campoBusquedaApoderado.value.trim();
 
+            if (texto.length < 2) {
+                ultimaBusquedaApoderado = '';
+                listaResultadosApoderado.replaceChildren();
+                mensajeBusquedaApoderado.textContent = 'Escribe al menos 2 caracteres.';
+                return;
+            }
+
+            temporizadorApoderado = setTimeout(() => buscarApoderados(texto), 300);
+        });
+
+        campoBusquedaApoderado.addEventListener('keydown', (evento) => {
+            if (evento.key === 'Enter') {
+                evento.preventDefault();
+            }
+        });
+    }
+
+    if (botonCambiarApoderado) {
+        botonCambiarApoderado.addEventListener('click', deseleccionarApoderado);
+    }
+
+    // Compatibilidad en caso de que exista un select tradicional
+    if (selectorApoderado && selectorApoderado.tagName === 'SELECT') {
+        selectorApoderado.addEventListener('change', () => {
+            pasoBusqueda.disabled = !selectorApoderado.value;
+            if (selectorApoderado.value) {
+                campoBusqueda.focus();
+            }
+            actualizarSeleccion();
+        });
+    }
+
+    // Eventos para buscador de estudiantes
     campoBusqueda.addEventListener('input', () => {
-        clearTimeout(temporizador);
+        clearTimeout(temporizadorEstudiante);
         const texto = campoBusqueda.value.trim();
 
         if (texto.length < 3) {
-            ultimaBusqueda = '';
+            ultimaBusquedaEstudiante = '';
             listaResultados.replaceChildren();
             mensajeBusqueda.textContent = 'Escribe al menos 3 caracteres.';
             return;
         }
 
-        temporizador = setTimeout(() => buscar(texto), 300);
+        temporizadorEstudiante = setTimeout(() => buscarEstudiantes(texto), 300);
     });
 
-    // Enter en el buscador no debe enviar el formulario
+    // Enter en el buscador de estudiante no debe enviar el formulario
     campoBusqueda.addEventListener('keydown', (evento) => {
         if (evento.key === 'Enter') {
             evento.preventDefault();

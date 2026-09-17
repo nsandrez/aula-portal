@@ -6,17 +6,22 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ActualizarMatriculaRequest;
 use App\Http\Requests\AsociarApoderadoRequest;
+use App\Http\Requests\BuscarApoderadosRequest;
 use App\Http\Requests\BuscarEstudiantesRequest;
 use App\Http\Requests\GuardarMatriculaRequest;
 use App\Models\Matricula;
 use App\Models\User;
 use App\Services\MatriculaService;
+use App\Services\UsuarioService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
 class MatriculaController extends Controller
 {
-    public function __construct(private MatriculaService $matriculaService) {}
+    public function __construct(
+        private MatriculaService $matriculaService,
+        private UsuarioService $usuarioService
+    ) {}
 
     /**
      * Registra la matrícula de un estudiante en un curso (existente o nuevo).
@@ -48,6 +53,16 @@ class MatriculaController extends Controller
     {
         return response()->json([
             'estudiantes' => $this->matriculaService->buscarEstudiantesMatriculados((string) $request->validated('busqueda')),
+        ]);
+    }
+
+    /**
+     * Devuelve los apoderados que coinciden con un RUT o nombre (nombre y primer o segundo apellido).
+     */
+    public function buscarApoderados(BuscarApoderadosRequest $request): JsonResponse
+    {
+        return response()->json([
+            'apoderados' => $this->usuarioService->buscarApoderados((string) $request->validated('busqueda')),
         ]);
     }
 

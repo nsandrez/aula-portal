@@ -6,6 +6,9 @@ namespace App\Services;
 
 use App\Enums\RolUsuario;
 use App\Models\User;
+use App\Utils\FormateadorRut;
+use App\Utils\PeriodoEscolar;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Hash;
 
@@ -59,5 +62,65 @@ class UsuarioService
     public function obtenerUsuariosPorRol(RolUsuario $rol): Collection
     {
         return User::query()->where('rol', $rol)->orderBy('name')->get();
+    }
+
+    /**
+     * Busca apoderados por RUT (con o sin formato) o por nombre (nombre y primer o segundo apellido).
+     *
+     * @return array<int, array{id: int, nombre: string, rut: string, email: string, pupilos_count: int, pupilos: array<int, string>}>
+     */
+    public function buscarApoderados(string $busqueda, int $limite = 10): array
+    {
+        $texto = trim($busqueda);
+        $rutLimpio = FormateadorRut::limpiarRut($texto);
+        $buscaPorRut = preg_match('/\d{3,}/', $rutLimpio) === 1;
+
+        $palabras = array_values(array_filter(
+            preg_split('/\s+/', $texto) ?: [],
+            fn (string $p): bool => mb_strlen($p) >= 2
+        ));
+
+        return User::query()
+            ->where('rol', RolUsuario::Apoderado)
+            ->where(function (Builder $consulta) use ($texto, $palabras, $rutLimpio, $buscaPorRut): void {
+                $consulta->where(function (Builder $sub) use ($palabras, $texto): void {
+                    if (! empty($palabras)) {
+                        foreach ($palabras as $palabra) {
+                            $sub->where('name', 'like', '%'.$palabra.'%');
+                        }
+                    } else {
+                        $sub->where('name', 'like', '%'.$texto.'%');
+                    }
+                });
+
+                if ($buscaPorRut) {
+                    $consulta->orWhereRaw(
+                        "UPPER(REPLACE(REPLACE(REPLACE(COALESCE(rut, ''), '.', ''), '-', ''), ' ', '')) LIKE ?",
+                        [$rutLimpio.'%']
+                    );
+                }
+            })
+            ->with(['pupilosMatriculados.estudiante'])
+            ->orderBy('name')
+            ->limit($limite)
+            ->get()
+            ->map(function (User $apoderado): array {
+                $pupilosActuales = $apoderado->pupilosMatriculados
+                    ->where('anio', PeriodoEscolar::anioVigente());
+
+                return [
+                    'id' => $apoderado->id,
+                    'nombre' => (string) $apoderado->name,
+                    'rut' => FormateadorRut::formatearRut($apoderado->rut),
+                    'email' => (string) $apoderado->email,
+                    'pupilos_count' => $pupilosActuales->count(),
+                    'pupilos' => $pupilosActuales
+                        ->map(fn ($m) => (string) $m->estudiante?->name)
+                        ->filter()
+                        ->values()
+                        ->all(),
+                ];
+            })
+            ->all();
     }
 }
